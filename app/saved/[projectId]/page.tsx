@@ -11,8 +11,6 @@ export default function ProjectPage({
   params: { projectId: string };
 }) {
   const { projectId } = params;
-
-  // Temporary client-side shots
   const [shots, setShots] = useState<{ id: string; url?: string }[]>([]);
   const router = useRouter();
 
@@ -22,7 +20,7 @@ export default function ProjectPage({
   };
 
   return (
-    <div className="p-10 space-y-8">
+    <div className="p-10 space-y-8" style={{ backgroundColor: "#ffe1a8" }}>
       <div className="p-6">
         <button
           onClick={() => router.push("/")}

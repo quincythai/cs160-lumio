@@ -108,7 +108,7 @@ export default function SavedPage() {
   };
 
   return (
-    <div className="p-10 max-w-7xl mx-auto">
+    <div className="p-10 max-w-7xl mx-auto" style={{ backgroundColor: "#ffe1a8" }}>
       <div className="p-6">
         <button
           onClick={() => router.push("/")}
@@ -164,7 +164,6 @@ export default function SavedPage() {
         </div>
       </div>
 
-      {/* Projects Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {projects.filter(p => p.name.toLowerCase().includes(searchTerm.trim().toLowerCase())).map((project) => (
           <Card
