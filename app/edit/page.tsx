@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useState } from "react";
+import PageHeader from "@/components/PageHeader";
 
 export default function EditPage() {
   const router = useRouter();
@@ -22,19 +23,7 @@ export default function EditPage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
-      <div className="p-6">
-        <button
-          onClick={() => router.push("/")}
-          className="text-xl hover:underline"
-          style={{ color: "#472d30" }}
-        >
-          Lumio
-        </button>
-        <span className="text-xl" style={{ color: "#472d30" }}>
-          {" "}| Edit shots
-        </span>
-        <hr className="mt-4 mb-8" style={{ borderColor: "#472d30" }} />
-      </div>
+      <PageHeader title="Edit shots" />
 
       <div className="flex items-center justify-center min-h-[60vh]">
         <label
@@ -59,9 +48,7 @@ export default function EditPage() {
               className="mb-4"
             />
           </div>
-          <p style={{ color: "#472d30" }}>
-            Click to upload
-          </p>
+          <p style={{ color: "#472d30" }}>Click to upload</p>
         </label>
       </div>
     </div>
