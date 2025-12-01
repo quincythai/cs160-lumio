@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
+import PageHeader from "@/components/PageHeader";
 
 export default function ProjectPage({
   params,
@@ -21,21 +22,11 @@ export default function ProjectPage({
 
   return (
     <div className="p-10 space-y-8" style={{ backgroundColor: "#ffe1a8" }}>
-      <div className="p-6">
-        <button
-          onClick={() => router.push("/")}
-          className="text-xl hover:underline"
-          style={{ color: "#472d30" }}
-        >
-          Lumio
-        </button>
-        <span className="text-xl" style={{ color: "#472d30" }}>
-          {" "}| Saved shots
-        </span>
-        <hr className="mt-4 mb-8" style={{ borderColor: "#472d30" }} />
-      </div>
+      <PageHeader title="Saved shots" />
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-heading text-plum">Project: {projectId}</h1>
+        <h1 className="text-3xl font-heading text-plum">
+          Project: {projectId}
+        </h1>
 
         <Button onClick={addShot} className="bg-coral text-white hover:bg-wine">
           + Add Shot
@@ -55,7 +46,11 @@ export default function ProjectPage({
             onClick={() => alert(`Open shot: ${shot.id}`)}
           >
             {shot.url ? (
-              <img src={shot.url} alt="Shot" className="w-full h-full object-cover rounded" />
+              <img
+                src={shot.url}
+                alt="Shot"
+                className="w-full h-full object-cover rounded"
+              />
             ) : (
               <div className="text-center text-wine">
                 <div className="text-xl font-heading mb-2">Empty Shot</div>

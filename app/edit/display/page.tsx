@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import PageHeader from "@/components/PageHeader";
 
 export default function DisplayPage() {
   const router = useRouter();
@@ -14,20 +15,7 @@ export default function DisplayPage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
-      <div className="p-6">
-        <button
-          onClick={() => router.push("/")}
-          className="text-xl hover:underline"
-          style={{ color: "#472d30" }}
-        >
-          Lumio
-        </button>
-        <span className="text-xl" style={{ color: "#472d30" }}>
-          {" "}
-          | Edit shots
-        </span>
-        <hr className="mt-4 mb-8" style={{ borderColor: "#472d30" }} />
-      </div>
+      <PageHeader title="Edit shots" />
 
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
         <div className="mb-8">
