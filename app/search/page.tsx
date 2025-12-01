@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import {
   Dropzone,
@@ -20,10 +21,31 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
 export default function SearchPage() {
+  const router = useRouter();
   const [files, setFiles] = useState<File[] | undefined>();
+  const [shotSize, setShotSize] = useState<string>("");
+  const [startYear, setStartYear] = useState<string>("");
+  const [endYear, setEndYear] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
+
   const handleDrop = (files: File[]) => {
     console.log(files);
     setFiles(files);
+  };
+
+  const handleSearch = () => {
+    // Build query parameters
+    const params = new URLSearchParams();
+    if (shotSize) params.append("shotSize", shotSize);
+    if (startYear) params.append("startYear", startYear);
+    if (endYear) params.append("endYear", endYear);
+    if (description) params.append("description", description);
+    if (files && files.length > 0) {
+      params.append("hasFiles", "true");
+    }
+
+    // Redirect to results page
+    router.push(`/search/results?${params.toString()}`);
   };
 
   return (
@@ -55,7 +77,7 @@ export default function SearchPage() {
 
           <div className="col-span-1">Shot Size</div>
           <div className="col-span-4">
-            <Select>
+            <Select value={shotSize} onValueChange={setShotSize}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
@@ -77,26 +99,43 @@ export default function SearchPage() {
 
           <div className="col-span-1">Time Period</div>
           <div className="col-span-2">
-            <Label htmlFor="number">Start Year</Label>
-            <Input type="number" placeholder="2025" />
+            <Label htmlFor="startYear">Start Year</Label>
+            <Input
+              id="startYear"
+              type="number"
+              placeholder="2025"
+              value={startYear}
+              onChange={(e) => setStartYear(e.target.value)}
+            />
           </div>
           <div className="col-span-2">
-            <Label htmlFor="number">End Year</Label>
-            <Input type="number" placeholder="2025" />
+            <Label htmlFor="endYear">End Year</Label>
+            <Input
+              id="endYear"
+              type="number"
+              placeholder="2025"
+              value={endYear}
+              onChange={(e) => setEndYear(e.target.value)}
+            />
           </div>
 
           <div className="col-span-1">Description</div>
           <div className="col-span-4">
-            <Label htmlFor="text">
+            <Label htmlFor="description">
               What does your shot look or feel like? Let your imagination run
               wild!
             </Label>
-            <Textarea placeholder="A dark and stormy night" />
+            <Textarea
+              id="description"
+              placeholder="A dark and stormy night"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
         </div>
 
         <div className="flex justify-end pb-5">
-          <Button>Search</Button>
+          <Button onClick={handleSearch}>Search</Button>
         </div>
       </div>
     </div>
