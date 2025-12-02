@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAtom } from "jotai";
+import { shotsAtom, type Shot } from "@/lib/atoms";
 import {
   Dialog,
   DialogHeader,
@@ -47,16 +49,39 @@ export default function SavedPage() {
   const [newProjectName, setNewProjectName] = useState("");
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const editInputRef = useRef<HTMLInputElement | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const createProject = () => {
-    if (!newProjectName.trim()) return;
+  // read global shots atom to show previews
+  const [allShots] = useAtom(shotsAtom);
 
-    const newId = crypto.randomUUID();
+  const createProject = () => {
+    const name = newProjectName.trim();
+    if (!name) return;
+
+    // prevent duplicate project names (case-insensitive)
+    const exists = projects.some(
+      (p) => p.name.trim().toLowerCase() === name.toLowerCase()
+    );
+    if (exists) {
+      window.alert(`A project named "${name}" already exists.`);
+      return;
+    }
+
+    // create a slug id from the name for the route
+    const slugify = (s: string) =>
+      s
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-");
+
+    const newId = slugify(name);
 
     const newProject: Project = {
       id: newId,
-      name: newProjectName,
+      name: name,
       updatedAt: new Date().toISOString().slice(0, 10),
     };
 
@@ -87,6 +112,16 @@ export default function SavedPage() {
     setEditingProjectId(projectId);
     setEditName(currentName);
   };
+
+  // focus the input when entering edit mode
+  useEffect(() => {
+    if (editingProjectId && editInputRef.current) {
+      editInputRef.current.focus();
+      const val = editInputRef.current.value;
+      editInputRef.current.value = "";
+      editInputRef.current.value = val;
+    }
+  }, [editingProjectId]);
 
   const saveEdit = () => {
     if (!editingProjectId) return;
@@ -134,10 +169,11 @@ export default function SavedPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="hidden md:block w-72"
+            style={{ backgroundColor: "rgba(245, 245, 245, 0.75)" }}
           />
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="bg-coral text-white hover:bg-wine">
+              <Button className="bg-coral text-white hover:bg-wine" style={{ backgroundColor: "#e26d5c" }}>
                 + New Project
               </Button>
             </DialogTrigger>
@@ -178,7 +214,10 @@ export default function SavedPage() {
             <Card
               key={project.id}
               className="p-6 border-2 border-sage hover:border-coral transition transform hover:-translate-y-1 rounded-lg shadow-sm bg-white cursor-pointer hover:shadow-md"
-              onClick={() => router.push(`/saved/${project.id}`)}
+              onClick={() => {
+                if (editingProjectId === project.id) return;
+                router.push(`/saved/${project.id}`);
+              }}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
@@ -193,30 +232,41 @@ export default function SavedPage() {
                   {editingProjectId === project.id ? (
                     <div>
                       <Input
+                        ref={editInputRef}
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
+                        onClick={(event: React.MouseEvent) => {
+                          event.stopPropagation();
+                        }}
+                        onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => {
+                          event.stopPropagation();
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            saveEdit();
+                          }
+                        }}
                         className="w-full mb-3"
                       />
-                      <div className="flex gap-2 justify-end">
-                        <Button
-                          className="bg-coral text-white px-3 py-1"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            saveEdit();
-                          }}
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          className="bg-transparent border border-sage text-sage px-3 py-1"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            cancelEdit();
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
+                              <div className="flex gap-2 justify-end">
+                                <Button
+                                  className="bg-coral text-white px-3 py-1"
+                                  onClick={(event: React.MouseEvent) => {
+                                    event.stopPropagation();
+                                    saveEdit();
+                                  }}
+                                >
+                                  Save
+                                </Button>
+                                <Button
+                                  className="bg-transparent border border-sage text-sage px-3 py-1"
+                                  onClick={(event: React.MouseEvent) => {
+                                    event.stopPropagation();
+                                    cancelEdit();
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
                     </div>
                   ) : (
                     <>
@@ -232,8 +282,8 @@ export default function SavedPage() {
                 <div className="flex flex-col items-end gap-2">
                   <Button
                     className="text-sm bg-red-600 text-white hover:bg-red-700 px-3 py-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
+                    onClick={(event: React.MouseEvent) => {
+                      event.stopPropagation();
                       const confirmDelete = window.confirm(
                         `Delete project "${project.name}"? This action cannot be undone and will not be backed up.`
                       );
@@ -244,8 +294,8 @@ export default function SavedPage() {
                   </Button>
                   <Button
                     className="text-sm bg-transparent border border-sage text-sage hover:bg-sage/10 px-3 py-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
+                    onClickCapture={(event: React.MouseEvent) => {
+                      event.stopPropagation();
                       startEdit(project.id, project.name);
                     }}
                   >
@@ -255,7 +305,19 @@ export default function SavedPage() {
               </div>
 
               <div className="mt-4 h-40 bg-sage/20 rounded overflow-hidden flex items-center justify-center text-wine">
-                <span className="text-sm">No preview</span>
+                {(() => {
+                  const first = (allShots?.[project.id] ?? [])[0] as Shot | undefined;
+                  if (first && first.url) {
+                    return (
+                      <img
+                        src={first.url}
+                        alt="Preview"
+                        className="w-full h-full object-cover rounded"
+                      />
+                    );
+                  }
+                  return <span className="text-sm">No preview</span>;
+                })()}
               </div>
             </Card>
           ))}
