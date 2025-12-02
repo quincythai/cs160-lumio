@@ -19,6 +19,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Field, FieldError } from "@/components/ui/field";
+
+const YEAR_OF_FIRST_MOVIE = 1878;
+const SHOT_SIZES = [
+  { label: "Extreme Close Up", value: "extreme close up" },
+  { label: "Close Up", value: "close up" },
+  { label: "Medium Close Up", value: "medium close up" },
+  { label: "Medium Shot", value: "medium shot" },
+  { label: "Cowboy Shot", value: "cowboy shot" },
+  { label: "Medium Full Shot", value: "medium full shot" },
+  { label: "Full Shot", value: "full shot" },
+];
 
 export default function SearchPage() {
   const router = useRouter();
@@ -48,6 +60,63 @@ export default function SearchPage() {
     router.push(`/search/results?${params.toString()}`);
   };
 
+  const handleReset = () => {
+    setFiles(undefined);
+    setShotSize("");
+    setStartYear("");
+    setEndYear("");
+    setDescription("");
+  };
+
+  const getStartYearFieldErrors = () => {
+    const errors = [];
+    if (parseInt(startYear, 10) < YEAR_OF_FIRST_MOVIE) {
+      errors.push({
+        message: `Start year must be greater than or equal to ${YEAR_OF_FIRST_MOVIE}`,
+      });
+    }
+    const currentYear = new Date().getFullYear();
+    if (parseInt(startYear, 10) > currentYear) {
+      errors.push({
+        message: `Start year must be less than or equal to ${currentYear}`,
+      });
+    }
+    if (parseInt(startYear, 10) > parseInt(endYear, 10)) {
+      errors.push({
+        message: "Start year must be less than or equal to end year",
+      });
+    }
+    return errors;
+  };
+
+  const getEndYearFieldErrors = () => {
+    const errors = [];
+    if (parseInt(endYear, 10) < YEAR_OF_FIRST_MOVIE) {
+      errors.push({
+        message: `End year must be greater than or equal to ${YEAR_OF_FIRST_MOVIE}`,
+      });
+    }
+    const currentYear = new Date().getFullYear();
+    if (parseInt(endYear, 10) > currentYear) {
+      errors.push({
+        message: `End year must be less than or equal to ${currentYear}`,
+      });
+    }
+    if (parseInt(startYear, 10) > parseInt(endYear, 10)) {
+      errors.push({
+        message: "End year must be greater than or equal to start year",
+      });
+    }
+    return errors;
+  };
+
+  const isSearchFormInvalid = () => {
+    if ((files && files.length > 0) || shotSize || startYear || endYear || description) {
+      return false;
+    }
+    return true;
+  }
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
       <PageHeader title="Search shots" />
@@ -59,11 +128,11 @@ export default function SearchPage() {
           </strong>
         </h1>
 
-        <div className="grid grid-cols-5 grid-rows-4 gap-5">
+        <div className="grid grid-cols-5 grid-rows-[auto_auto_auto_auto] gap-5">
           <div className="col-span-1">Image Upload</div>
           <Dropzone
             accept={{ "image/*": [] }}
-            maxFiles={10}
+            maxFiles={1}
             maxSize={1024 * 1024 * 10}
             minSize={1024}
             onDrop={handleDrop}
@@ -78,50 +147,56 @@ export default function SearchPage() {
           <div className="col-span-1">Shot Size</div>
           <div className="col-span-4">
             <Select value={shotSize} onValueChange={setShotSize}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px] bg-white">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="extreme close up">
-                  Extreme Close Up
-                </SelectItem>
-                <SelectItem value="close up">Close Up</SelectItem>
-                <SelectItem value="medium close up">Medium Close Up</SelectItem>
-                <SelectItem value="medium shot">Medium Shot</SelectItem>
-                <SelectItem value="cowboy shot">Cowboy Shot</SelectItem>
-                <SelectItem value="medium full shot">
-                  Medium Full Shot
-                </SelectItem>
-                <SelectItem value="full shot">Full Shot</SelectItem>
+                {SHOT_SIZES.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>
+                    {s.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="col-span-1">Time Period</div>
           <div className="col-span-2">
-            <Label htmlFor="startYear">Start Year</Label>
-            <Input
-              id="startYear"
-              type="number"
-              placeholder="2025"
-              value={startYear}
-              onChange={(e) => setStartYear(e.target.value)}
-            />
+            <Field data-invalid={getStartYearFieldErrors().length > 0}>
+              <Label htmlFor="startYear" className="pb-2">
+                Start Year
+              </Label>
+              <Input
+                id="startYear"
+                type="number"
+                placeholder="1878"
+                value={startYear}
+                onChange={(e) => setStartYear(e.target.value)}
+                className="bg-white"
+              />
+              <FieldError errors={getStartYearFieldErrors()} />
+            </Field>
           </div>
           <div className="col-span-2">
-            <Label htmlFor="endYear">End Year</Label>
-            <Input
-              id="endYear"
-              type="number"
-              placeholder="2025"
-              value={endYear}
-              onChange={(e) => setEndYear(e.target.value)}
-            />
+            <Field data-invalid={getEndYearFieldErrors().length > 0}>
+              <Label htmlFor="endYear" className="pb-2">
+                End Year
+              </Label>
+              <Input
+                id="endYear"
+                type="number"
+                placeholder="2025"
+                value={endYear}
+                onChange={(e) => setEndYear(e.target.value)}
+                className="bg-white"
+              />
+              <FieldError errors={getEndYearFieldErrors()} />
+            </Field>
           </div>
 
           <div className="col-span-1">Description</div>
           <div className="col-span-4">
-            <Label htmlFor="description">
+            <Label htmlFor="description" className="pb-2">
               What does your shot look or feel like? Let your imagination run
               wild!
             </Label>
@@ -130,13 +205,21 @@ export default function SearchPage() {
               placeholder="A dark and stormy night"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              className="bg-white"
             />
           </div>
         </div>
 
-        <div className="flex justify-end pb-5">
-          <Button onClick={handleSearch}>Search</Button>
+        <div className="flex justify-end pb-5 pt-5 gap-5">
+          <Button onClick={handleReset} variant="outline" type="reset">
+            Reset
+          </Button>
+          <Button onClick={handleSearch} type="submit" disabled={getStartYearFieldErrors().length > 0 || getEndYearFieldErrors().length > 0 || isSearchFormInvalid()}>
+            Search
+          </Button>
         </div>
+
+        {isSearchFormInvalid() && <FieldError errors={[{message: "Need to fill out at least 1 search query field"}]} className="flex justify-end" />}
       </div>
     </div>
   );
