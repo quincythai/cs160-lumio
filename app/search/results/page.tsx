@@ -1,10 +1,11 @@
 "use client";
 
+import { useAtom, useAtomValue } from "jotai";
 import { Card } from "@/components/ui/card";
-import { Plus, Download, Filter } from "lucide-react";
+import { Plus, Check } from "lucide-react";
 import Image from "next/image";
 import PageHeader from "@/components/PageHeader";
-import { Button } from "@/components/ui/button";
+import { projectsAtom, currentProjectIdAtom, type Shot } from "@/lib/store";
 
 type SearchResult = {
   id: string;
@@ -103,12 +104,62 @@ const mockResults: SearchResult[] = [
 ];
 
 export default function SearchResultsPage() {
+  const projects = useAtomValue(projectsAtom);
+  const [currentProjectId] = useAtom(currentProjectIdAtom);
+  const [, setProjects] = useAtom(projectsAtom);
+
+  const currentProject = projects.find((p) => p.id === currentProjectId);
+
+  const isShotInProject = (shotId: string): boolean => {
+    if (!currentProject) return false;
+    return currentProject.shots.some((shot) => shot.id === shotId);
+  };
+
+  const handleAddShot = (shot: Shot) => {
+    if (!currentProjectId) {
+      alert(
+        "Please select a project first. Go to Saved shots to create or select a project."
+      );
+      return;
+    }
+
+    const isAlreadyAdded = isShotInProject(shot.id);
+
+    if (isAlreadyAdded) {
+      // Remove shot from project
+      setProjects((prev) =>
+        prev.map((project) =>
+          project.id === currentProjectId
+            ? {
+                ...project,
+                shots: project.shots.filter((s) => s.id !== shot.id),
+                updatedAt: new Date().toISOString(),
+              }
+            : project
+        )
+      );
+    } else {
+      // Add shot to project
+      setProjects((prev) =>
+        prev.map((project) =>
+          project.id === currentProjectId
+            ? {
+                ...project,
+                shots: [...project.shots, shot],
+                updatedAt: new Date().toISOString(),
+              }
+            : project
+        )
+      );
+    }
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
       <PageHeader title="Search results" />
 
       <div className="p-6">
-        <div className="mb-6">
+        {/* <div className="mb-6">
           <Button
             className="flex items-center gap-2"
             style={{ backgroundColor: "#472d30", color: "#ffe1a8" }}
@@ -116,7 +167,7 @@ export default function SearchResultsPage() {
             <Filter size={18} />
             Filter
           </Button>
-        </div>
+        </div> */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {mockResults.map((result) => (
             <Card
@@ -151,19 +202,32 @@ export default function SearchResultsPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
+                      onClick={() => handleAddShot(result)}
                       className="p-2 hover:bg-gray-100 rounded transition-colors"
-                      style={{ color: "#472d30" }}
-                      aria-label="Add to project"
+                      style={{
+                        color: isShotInProject(result.id)
+                          ? "#22c55e"
+                          : "#472d30",
+                      }}
+                      aria-label={
+                        isShotInProject(result.id)
+                          ? "Remove from project"
+                          : "Add to project"
+                      }
                     >
-                      <Plus size={20} />
+                      {isShotInProject(result.id) ? (
+                        <Check size={20} />
+                      ) : (
+                        <Plus size={20} />
+                      )}
                     </button>
-                    <button
+                    {/* <button
                       className="p-2 hover:bg-gray-100 rounded transition-colors"
                       style={{ color: "#472d30" }}
                       aria-label="Download"
                     >
                       <Download size={20} />
-                    </button>
+                    </button> */}
                   </div>
                 </div>
                 <span className="text-sm" style={{ color: "#472d30" }}>

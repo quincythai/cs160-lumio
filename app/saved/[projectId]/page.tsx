@@ -1,62 +1,322 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, use, useState } from "react";
+import { useAtom, useAtomValue } from "jotai";
+import { X, Download, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import PageHeader from "@/components/PageHeader";
+import { projectsAtom, currentProjectIdAtom } from "@/lib/store";
 
 export default function ProjectPage({
   params,
 }: {
-  params: { projectId: string };
+  params: Promise<{ projectId: string }>;
 }) {
-  const { projectId } = params;
-  const [shots, setShots] = useState<{ id: string; url?: string }[]>([]);
+  const { projectId } = use(params);
   const router = useRouter();
 
-  const addShot = () => {
-    const newId = crypto.randomUUID();
-    setShots((prev) => [...prev, { id: newId }]);
+  const projects = useAtomValue(projectsAtom);
+  const [currentProjectId, setCurrentProjectId] = useAtom(currentProjectIdAtom);
+  const [, setProjects] = useAtom(projectsAtom);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+
+  const project = projects.find((p) => p.id === projectId);
+  const shots = project?.shots || [];
+
+  const [editedTitle, setEditedTitle] = useState("");
+
+  // Auto-set current project when page loads
+  useEffect(() => {
+    if (projectId && currentProjectId !== projectId) {
+      setCurrentProjectId(projectId);
+    }
+  }, [projectId, currentProjectId, setCurrentProjectId]);
+
+  // Initialize editedTitle when project changes and not editing
+  useEffect(() => {
+    if (project && !isEditingTitle) {
+      setEditedTitle(project.name);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project?.id, isEditingTitle]);
+
+  const handleNotesChange = (shotId: string, notes: string) => {
+    if (!project) return;
+
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === projectId
+          ? {
+              ...p,
+              shots: p.shots.map((shot) =>
+                shot.id === shotId ? { ...shot, notes } : shot
+              ),
+              updatedAt: new Date().toISOString(),
+            }
+          : p
+      )
+    );
   };
 
-  return (
-    <div className="p-10 space-y-8" style={{ backgroundColor: "#ffe1a8" }}>
-      <PageHeader title="Saved shots" />
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-heading text-plum">
-          Project: {projectId}
-        </h1>
+  const handleRemoveShot = (shotId: string) => {
+    if (!project) return;
 
-        <Button onClick={addShot} className="bg-coral text-white hover:bg-wine">
-          + Add Shot
-        </Button>
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === projectId
+          ? {
+              ...p,
+              shots: p.shots.filter((shot) => shot.id !== shotId),
+              updatedAt: new Date().toISOString(),
+            }
+          : p
+      )
+    );
+  };
+
+  const handleTitleEdit = () => {
+    if (!project) return;
+    setIsEditingTitle(true);
+    setEditedTitle(project.name);
+  };
+
+  const handleTitleSave = () => {
+    if (!project || !editedTitle.trim()) {
+      setIsEditingTitle(false);
+      return;
+    }
+
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === projectId
+          ? {
+              ...p,
+              name: editedTitle.trim(),
+              updatedAt: new Date().toISOString(),
+            }
+          : p
+      )
+    );
+    setIsEditingTitle(false);
+  };
+
+  const handleTitleCancel = () => {
+    setIsEditingTitle(false);
+    if (project) {
+      setEditedTitle(project.name);
+    }
+  };
+
+  const handleExport = () => {
+    if (!project) return;
+
+    const exportData = {
+      projectName: project.name,
+      projectId: project.id,
+      updatedAt: project.updatedAt,
+      exportedAt: new Date().toISOString(),
+      shots: project.shots.map((shot) => ({
+        id: shot.id,
+        title: shot.title,
+        year: shot.year,
+        timestamp: shot.timestamp,
+        imageUrl: shot.imageUrl,
+        notes: shot.notes || "",
+      })),
+    };
+
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${project.name.replace(/[^a-z0-9]/gi, "_")}_export_${
+      new Date().toISOString().split("T")[0]
+    }.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  if (!project) {
+    return (
+      <div className="min-h-screen p-10" style={{ backgroundColor: "#ffe1a8" }}>
+        <PageHeader title="Saved shots" />
+        <p className="text-wine text-lg">Project not found</p>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="min-h-screen p-10 space-y-8"
+      style={{ backgroundColor: "#ffe1a8" }}
+    >
+      <PageHeader title="Saved shots" />
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex items-center gap-4">
+          {isEditingTitle ? (
+            <div className="flex items-center gap-2">
+              <Input
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleTitleSave();
+                  } else if (e.key === "Escape") {
+                    handleTitleCancel();
+                  }
+                }}
+                className="text-3xl font-heading"
+                style={{ color: "#472d30" }}
+                autoFocus
+              />
+              <Button
+                onClick={handleTitleSave}
+                className="px-3 py-1 text-sm"
+                style={{ backgroundColor: "#472d30", color: "#ffe1a8" }}
+              >
+                Save
+              </Button>
+              <Button
+                onClick={handleTitleCancel}
+                className="px-3 py-1 text-sm bg-transparent border"
+                style={{ borderColor: "#472d30", color: "#472d30" }}
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <h1
+                className="text-3xl font-heading text-plum cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={handleTitleEdit}
+              >
+                {project.name}
+              </h1>
+              <button
+                onClick={handleTitleEdit}
+                className="p-1 hover:bg-gray-200 rounded transition-colors"
+                style={{ color: "#472d30" }}
+                aria-label="Edit project name"
+              >
+                <Edit2 size={18} />
+              </button>
+            </div>
+          )}
+          <Button
+            onClick={handleExport}
+            className="flex items-center gap-2"
+            style={{ backgroundColor: "#472d30", color: "#ffe1a8" }}
+          >
+            <Download size={18} />
+            Export
+          </Button>
+          {projects.length > 1 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm" style={{ color: "#472d30" }}>
+                Switch to:
+              </span>
+              <Select
+                value={currentProjectId || undefined}
+                onValueChange={(value) => {
+                  setCurrentProjectId(value);
+                  router.push(`/saved/${value}`);
+                }}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Select project" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Shots Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {shots.length === 0 && (
-          <p className="text-wine text-lg">No shots yet. Click “Add Shot”.</p>
+          <p className="text-wine text-lg">
+            No shots yet. Add shots from search results.
+          </p>
         )}
 
         {shots.map((shot) => (
           <Card
             key={shot.id}
-            className="p-4 border-2 border-sage hover:border-coral cursor-pointer transition flex flex-col items-center justify-center h-48"
-            onClick={() => alert(`Open shot: ${shot.id}`)}
+            className="overflow-hidden border-2 hover:shadow-lg transition-shadow bg-white relative"
+            style={{ borderColor: "#472d30" }}
           >
-            {shot.url ? (
-              <img
-                src={shot.url}
-                alt="Shot"
-                className="w-full h-full object-cover rounded"
+            <button
+              onClick={() => handleRemoveShot(shot.id)}
+              className="absolute top-2 right-2 z-10 p-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-colors"
+              style={{ color: "#472d30" }}
+              aria-label="Remove shot from project"
+            >
+              <X size={18} />
+            </button>
+            <div className="relative w-full aspect-video bg-gray-200">
+              <Image
+                src={shot.imageUrl}
+                alt={shot.title}
+                fill
+                className="object-cover"
+                unoptimized
               />
-            ) : (
-              <div className="text-center text-wine">
-                <div className="text-xl font-heading mb-2">Empty Shot</div>
-                <div className="text-sm text-plum">Click to edit</div>
+            </div>
+            <div className="p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3
+                    className="font-semibold text-lg"
+                    style={{ color: "#472d30" }}
+                  >
+                    {shot.title}
+                  </h3>
+                  <span
+                    className="text-sm"
+                    style={{ color: "#472d30", opacity: 0.7 }}
+                  >
+                    {shot.year}
+                  </span>
+                </div>
               </div>
-            )}
+              <span className="text-sm" style={{ color: "#472d30" }}>
+                {shot.timestamp}
+              </span>
+              <div className="mt-2">
+                <Textarea
+                  placeholder="Add notes about this shot..."
+                  value={shot.notes || ""}
+                  onChange={(e) => handleNotesChange(shot.id, e.target.value)}
+                  className="w-full min-h-20 text-sm resize-none"
+                  style={{
+                    borderColor: "#472d30",
+                    color: "#472d30",
+                  }}
+                />
+              </div>
+            </div>
           </Card>
         ))}
       </div>
