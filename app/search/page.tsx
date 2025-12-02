@@ -78,7 +78,7 @@ export default function SearchPage() {
           <div className="col-span-1">Shot Size</div>
           <div className="col-span-4">
             <Select value={shotSize} onValueChange={setShotSize}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px] bg-white">
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
@@ -99,29 +99,31 @@ export default function SearchPage() {
 
           <div className="col-span-1">Time Period</div>
           <div className="col-span-2">
-            <Label htmlFor="startYear">Start Year</Label>
+            <Label htmlFor="startYear" className="pb-2">Start Year</Label>
             <Input
               id="startYear"
               type="number"
-              placeholder="2025"
+              placeholder="1878"
               value={startYear}
               onChange={(e) => setStartYear(e.target.value)}
+              className="bg-white"
             />
           </div>
           <div className="col-span-2">
-            <Label htmlFor="endYear">End Year</Label>
+            <Label htmlFor="endYear" className="pb-2">End Year</Label>
             <Input
               id="endYear"
               type="number"
               placeholder="2025"
               value={endYear}
               onChange={(e) => setEndYear(e.target.value)}
+              className="bg-white"
             />
           </div>
 
           <div className="col-span-1">Description</div>
           <div className="col-span-4">
-            <Label htmlFor="description">
+            <Label htmlFor="description" className="pb-2">
               What does your shot look or feel like? Let your imagination run
               wild!
             </Label>
@@ -130,6 +132,7 @@ export default function SearchPage() {
               placeholder="A dark and stormy night"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              className="bg-white"
             />
           </div>
         </div>
