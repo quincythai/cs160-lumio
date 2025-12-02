@@ -76,7 +76,7 @@ export default function SearchPage() {
       });
     }
     const currentYear = new Date().getFullYear();
-    if (parseInt(startYear, 10) >= currentYear) {
+    if (parseInt(startYear, 10) > currentYear) {
       errors.push({
         message: `Start year must be less than or equal to ${currentYear}`,
       });
@@ -97,7 +97,7 @@ export default function SearchPage() {
       });
     }
     const currentYear = new Date().getFullYear();
-    if (parseInt(endYear, 10) >= currentYear) {
+    if (parseInt(endYear, 10) > currentYear) {
       errors.push({
         message: `End year must be less than or equal to ${currentYear}`,
       });
@@ -109,6 +109,13 @@ export default function SearchPage() {
     }
     return errors;
   };
+
+  const isSearchFormInvalid = () => {
+    if ((files && files.length > 0) || shotSize || startYear || endYear || description) {
+      return false;
+    }
+    return true;
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
@@ -207,10 +214,12 @@ export default function SearchPage() {
           <Button onClick={handleReset} variant="outline" type="reset">
             Reset
           </Button>
-          <Button onClick={handleSearch} type="submit">
+          <Button onClick={handleSearch} type="submit" disabled={getStartYearFieldErrors().length > 0 || getEndYearFieldErrors().length > 0 || isSearchFormInvalid()}>
             Search
           </Button>
         </div>
+
+        {isSearchFormInvalid() && <FieldError errors={[{message: "Need to fill out at least 1 search query field"}]} className="flex justify-end" />}
       </div>
     </div>
   );
