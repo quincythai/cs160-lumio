@@ -59,7 +59,7 @@ export default function SearchPage() {
           </strong>
         </h1>
 
-        <div className="grid grid-cols-5 grid-rows-4 gap-5">
+        <div className="grid grid-cols-5 grid-rows-[auto_auto_auto_auto] gap-5">
           <div className="col-span-1">Image Upload</div>
           <Dropzone
             accept={{ "image/*": [] }}
@@ -137,7 +137,7 @@ export default function SearchPage() {
           </div>
         </div>
 
-        <div className="flex justify-end pb-5">
+        <div className="flex justify-end pb-5 pt-5">
           <Button onClick={handleSearch}>Search</Button>
         </div>
       </div>
