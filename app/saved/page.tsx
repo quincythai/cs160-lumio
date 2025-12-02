@@ -1,11 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { useAtom } from "jotai";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import PageHeader from "@/components/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogHeader,
@@ -14,39 +23,14 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
-type Project = {
-  id: string;
-  name: string;
-  updatedAt: string;
-};
+import { projectsAtom, currentProjectIdAtom, type Project } from "@/lib/store";
 
 export default function SavedPage() {
   const router = useRouter();
-
-  // Persistent client-side store using localStorage (replace with backend later)
-  const STORAGE_KEY = "lumio_projects_v1";
-
-  const seedProjects: Project[] = [
-    { id: "p1", name: "My First Project", updatedAt: "2025-01-01" },
-    { id: "p2", name: "Nature shots", updatedAt: "2025-01-12" },
-  ];
-
-  const [projects, setProjects] = useState<Project[]>(() => {
-    try {
-      if (typeof window !== "undefined") {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) return JSON.parse(raw) as Project[];
-      }
-    } catch (e) {
-      // ignore parse errors
-    }
-    return seedProjects;
-  });
+  const [projects, setProjects] = useAtom(projectsAtom);
+  const [currentProjectId, setCurrentProjectId] = useAtom(currentProjectIdAtom);
 
   const [newProjectName, setNewProjectName] = useState("");
-  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
-  const [editName, setEditName] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
   const createProject = () => {
@@ -57,15 +41,14 @@ export default function SavedPage() {
     const newProject: Project = {
       id: newId,
       name: newProjectName,
-      updatedAt: new Date().toISOString().slice(0, 10),
+      updatedAt: new Date().toISOString(),
+      shots: [],
     };
 
-    // Update state and persist immediately so navigation back shows the new project
-    const newProjects = [...projects, newProject];
-    setProjects(newProjects);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newProjects));
-    } catch (e) {}
+    // Update state (Jotai handles localStorage persistence)
+    setProjects([...projects, newProject]);
+    // Auto-set as current project
+    setCurrentProjectId(newId);
     setNewProjectName("");
 
     // Navigate to project page
@@ -75,48 +58,15 @@ export default function SavedPage() {
   const deleteProject = (projectId: string) => {
     const updated = projects.filter((p) => p.id !== projectId);
     setProjects(updated);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch (e) {}
-    if (editingProjectId === projectId) {
-      cancelEdit();
+    // Clear current project if it was deleted
+    if (currentProjectId === projectId) {
+      setCurrentProjectId(null);
     }
-  };
-
-  const startEdit = (projectId: string, currentName: string) => {
-    setEditingProjectId(projectId);
-    setEditName(currentName);
-  };
-
-  const saveEdit = () => {
-    if (!editingProjectId) return;
-    if (!editName.trim()) return;
-
-    const updated = projects.map((p) =>
-      p.id === editingProjectId
-        ? {
-            ...p,
-            name: editName,
-            updatedAt: new Date().toISOString().slice(0, 10),
-          }
-        : p
-    );
-    setProjects(updated);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch (e) {}
-    setEditingProjectId(null);
-    setEditName("");
-  };
-
-  const cancelEdit = () => {
-    setEditingProjectId(null);
-    setEditName("");
   };
 
   return (
     <div
-      className="p-10 max-w-7xl mx-auto"
+      className="min-h-screen p-10 max-w-7xl mx-auto"
       style={{ backgroundColor: "#ffe1a8" }}
     >
       <PageHeader title="Saved shots" />
@@ -127,6 +77,28 @@ export default function SavedPage() {
             Saved shot collections and moodboards
           </p>
         </div>
+        {projects.length > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm" style={{ color: "#472d30" }}>
+              Switch to:
+            </span>
+            <Select
+              value={currentProjectId || undefined}
+              onValueChange={setCurrentProjectId}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select project" />
+              </SelectTrigger>
+              <SelectContent>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="flex items-center gap-3">
           <Input
@@ -137,7 +109,18 @@ export default function SavedPage() {
           />
           <Dialog>
             <DialogTrigger asChild>
-              <Button className="bg-coral text-white hover:bg-wine">
+              <Button
+                className="text-white"
+                style={{
+                  backgroundColor: "#c9cba3",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#ffe1a8";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#c9cba3";
+                }}
+              >
                 + New Project
               </Button>
             </DialogTrigger>
@@ -178,60 +161,36 @@ export default function SavedPage() {
             <Card
               key={project.id}
               className="p-6 border-2 border-sage hover:border-coral transition transform hover:-translate-y-1 rounded-lg shadow-sm bg-white cursor-pointer hover:shadow-md"
-              onClick={() => router.push(`/saved/${project.id}`)}
+              onClick={() => {
+                setCurrentProjectId(project.id);
+                router.push(`/saved/${project.id}`);
+              }}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === "Enter" || e.key === " ") {
                   e.preventDefault();
+                  setCurrentProjectId(project.id);
                   router.push(`/saved/${project.id}`);
                 }
               }}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  {editingProjectId === project.id ? (
-                    <div>
-                      <Input
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        className="w-full mb-3"
-                      />
-                      <div className="flex gap-2 justify-end">
-                        <Button
-                          className="bg-coral text-white px-3 py-1"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            saveEdit();
-                          }}
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          className="bg-transparent border border-sage text-sage px-3 py-1"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            cancelEdit();
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <h2 className="text-xl font-heading text-plum mb-2">
-                        {project.name}
-                      </h2>
-                      <p className="text-sm text-wine">
-                        Last updated: {project.updatedAt}
-                      </p>
-                    </>
-                  )}
+                  <h2 className="text-xl font-heading text-plum mb-2">
+                    {project.name}
+                  </h2>
+                  <p className="text-sm text-wine">
+                    Last updated: {new Date(project.updatedAt).toLocaleString()}
+                  </p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   <Button
-                    className="text-sm bg-red-600 text-white hover:bg-red-700 px-3 py-1"
+                    className="text-sm px-3 py-1"
+                    style={{
+                      backgroundColor: "#dc2626",
+                      color: "#ffffff",
+                    }}
                     onClick={(e) => {
                       e.stopPropagation();
                       const confirmDelete = window.confirm(
@@ -242,20 +201,42 @@ export default function SavedPage() {
                   >
                     Delete
                   </Button>
-                  <Button
-                    className="text-sm bg-transparent border border-sage text-sage hover:bg-sage/10 px-3 py-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      startEdit(project.id, project.name);
-                    }}
-                  >
-                    Edit
-                  </Button>
                 </div>
               </div>
 
-              <div className="mt-4 h-40 bg-sage/20 rounded overflow-hidden flex items-center justify-center text-wine">
-                <span className="text-sm">No preview</span>
+              <div className="mt-4 h-40 rounded overflow-hidden">
+                {project.shots.length === 0 ? (
+                  <div className="h-full bg-sage/20 flex items-center justify-center text-wine">
+                    <span className="text-sm">No shots yet</span>
+                  </div>
+                ) : (
+                  <div className="h-full grid grid-cols-2 gap-1">
+                    {project.shots.slice(0, 4).map((shot) => (
+                      <div
+                        key={shot.id}
+                        className="relative w-full h-full bg-gray-200"
+                      >
+                        <Image
+                          src={shot.imageUrl}
+                          alt={shot.title}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      </div>
+                    ))}
+                    {project.shots.length > 4 && (
+                      <div className="relative w-full h-full bg-sage/40 flex items-center justify-center">
+                        <span
+                          className="text-xs font-semibold"
+                          style={{ color: "#472d30" }}
+                        >
+                          +{project.shots.length - 4}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </Card>
           ))}
