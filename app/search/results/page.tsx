@@ -38,6 +38,7 @@ export default function SearchResultsPage() {
   const [currentProjectId] = useAtom(currentProjectIdAtom);
   const [, setProjects] = useAtom(projectsAtom);
 
+  const [loading, setLoading] = useState<boolean>(true);
   const [matchingShotIds, setMatchingShotIds] = useState<number[]>([]);
   const searchResults: SearchResult[] = shotMetadata
     .filter((shot: ShotMetadata) => matchingShotIds.includes(shot.id))
@@ -69,7 +70,10 @@ export default function SearchResultsPage() {
       body: formData,
     })
       .then((data) => data.json())
-      .then((data) => setMatchingShotIds(data.matchingShotIds));
+      .then((data) => {
+        setMatchingShotIds(data.matchingShotIds);
+        setLoading(false);
+      });
   }, [searchParams]);
 
   const isShotInProject = (shotId: string): boolean => {
@@ -121,7 +125,7 @@ export default function SearchResultsPage() {
       <PageHeader title="Search results" />
 
       <div className="p-6">
-        {searchResults.length === 0 ? (
+        {loading ? (
           <div className="flex justify-center">
             <Spinner className="size-25" />
           </div>
@@ -136,6 +140,9 @@ export default function SearchResultsPage() {
           //   </Button>
           // </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {searchResults.length === 0 && (
+              <div>No matching shots in database</div>
+            )}
             {searchResults.map((result) => (
               <Card
                 key={result.id}
