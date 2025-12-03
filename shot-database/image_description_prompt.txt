@@ -1,10 +1,4 @@
-Model: gemini.google.com
-
-Prompt:
-
-<upload single image>
-
-Here is a shot from MOVIE_TITLE (YEAR). Describe the following about the shot in at most 1 paragraph:
+Here is a shot from {movie_title} ({year}). Describe the following about the shot in at most 7 sentences:
 
 - What is happening in the shot
 - What character(s) are in the shot
@@ -14,5 +8,10 @@ Here is a shot from MOVIE_TITLE (YEAR). Describe the following about the shot in
 - The mood or emotion evoked by the shot
 - The shot composition
 - The shot lighting
-- The shot colorin
+- The shot coloring
 - Any other details you think would be relevant to a filmmaker
+
+DO NOT include any of the following:
+
+- The movie title
+- The movie release year
