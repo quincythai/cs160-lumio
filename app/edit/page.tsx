@@ -1,55 +1,54 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { useState } from "react";
 import PageHeader from "@/components/PageHeader";
+import {
+  Dropzone,
+  DropzoneContent,
+  DropzoneEmptyState,
+} from "@/components/ui/shadcn-io/dropzone";
 
 export default function EditPage() {
   const router = useRouter();
+  const [files, setFiles] = useState<File[] | undefined>();
 
-  const handleUpload = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
+  const handleDrop = async (droppedFiles: File[]) => {
+    setFiles(droppedFiles);
 
-    const response = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    }); // send to API route to upload for now this is just saving to the public folder
+    if (droppedFiles.length > 0) {
+      const file = droppedFiles[0];
+      const formData = new FormData();
+      formData.append("file", file);
 
-    const data = await response.json();
-    router.push(`/edit/display?image=${data.filename}`); // sending in the image to display as params in the URL
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      }); // send to API route to upload for now this is just saving to the public folder
+
+      const data = await response.json();
+      router.push(`/edit/display?image=${data.filename}`); // sending in the image to display as params in the URL
+    }
   };
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
       <PageHeader title="Edit shots" />
 
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <label
-          className="border-2 border-dashed p-12 rounded"
-          style={{ borderColor: "#472d30" }}
+      <div className="flex items-center justify-center min-h-[60vh] px-6">
+        <Dropzone
+          accept={{ "image/*": [] }}
+          maxFiles={1}
+          maxSize={1024 * 1024 * 10}
+          minSize={1024}
+          onDrop={handleDrop}
+          onError={console.error}
+          src={files}
+          className="w-full max-w-md"
         >
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleUpload(file);
-            }}
-            className="hidden"
-          />
-          <div className="flex justify-center">
-            <Image
-              src="/upload.png"
-              alt="Upload"
-              width={50}
-              height={50}
-              className="mb-4"
-            />
-          </div>
-          <p style={{ color: "#472d30" }}>Click to upload</p>
-        </label>
+          <DropzoneEmptyState />
+          <DropzoneContent />
+        </Dropzone>
       </div>
     </div>
   );

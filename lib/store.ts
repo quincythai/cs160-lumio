@@ -1,4 +1,5 @@
 import { atomWithStorage } from 'jotai/utils';
+import { atom } from 'jotai';
 
 export type Shot = {
   id: string;
@@ -39,3 +40,4 @@ export const currentProjectIdAtom = atomWithStorage<string | null>(
   DEFAULT_PROJECT_ID
 );
 
+export const referenceImageAtom = atom<string>('');

@@ -3,6 +3,9 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import PageHeader from "@/components/PageHeader";
+import { useAtom } from "jotai";
+import { shotsAtom, SHOTS_STORAGE_KEY } from "@/lib/atoms";
+import { currentProjectIdAtom } from "@/lib/store";
 
 export default function DisplayPage() {
   const router = useRouter();
@@ -12,6 +15,33 @@ export default function DisplayPage() {
   if (!imageName) {
     return <div>Some sort of error message</div>;
   }
+
+  const [allShots, setAllShots] = useAtom(shotsAtom);
+  const [currentProjectId] = useAtom(currentProjectIdAtom);
+
+  const handleConfirm = () => {
+    if (!imageName) return;
+    const id = crypto.randomUUID();
+    const newShot = {
+      id,
+      url: `/${imageName}`,
+      title: "",
+      year: "",
+      timestamp: new Date().toISOString(),
+      notes: "",
+    };
+
+    const pid = currentProjectId || "unsaved";
+    const next = { ...allShots, [pid]: [...(allShots[pid] || []), newShot] };
+    setAllShots(next);
+    try {
+      localStorage.setItem(SHOTS_STORAGE_KEY, JSON.stringify(next));
+    } catch (_e) {
+      // ignore
+    }
+
+    router.push(`/edit/${id}`);
+  };
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
@@ -36,6 +66,7 @@ export default function DisplayPage() {
             ← Go back
           </button>
           <button
+            onClick={handleConfirm}
             className="px-6 py-3 rounded border-2 hover:underline"
             style={{ borderColor: "#472d30", color: "#472d30" }}
           >
