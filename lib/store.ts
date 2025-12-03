@@ -1,5 +1,4 @@
 import { atomWithStorage } from 'jotai/utils';
-import { atom } from 'jotai';
 
 export type Shot = {
   id: string;
@@ -39,5 +38,3 @@ export const currentProjectIdAtom = atomWithStorage<string | null>(
   'lumio_current_project',
   DEFAULT_PROJECT_ID
 );
-
-export const searchResultsAtom = atom<number[]>([]);

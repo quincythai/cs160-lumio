@@ -1,11 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import { Card } from "@/components/ui/card";
 import { Plus, Check } from "lucide-react";
 import Image from "next/image";
 import PageHeader from "@/components/PageHeader";
 import { projectsAtom, currentProjectIdAtom, type Shot } from "@/lib/store";
+import { useSearchParams } from 'next/navigation';
 
 type SearchResult = {
   id: string;
@@ -104,11 +106,38 @@ const mockResults: SearchResult[] = [
 ];
 
 export default function SearchResultsPage() {
+  const searchParams = useSearchParams();
+
   const projects = useAtomValue(projectsAtom);
   const [currentProjectId] = useAtom(currentProjectIdAtom);
   const [, setProjects] = useAtom(projectsAtom);
 
+  // TODO display cards, make up timestamps
+  const [matchingShotIds, setMatchingShotIds] = useState([]);
+
   const currentProject = projects.find((p) => p.id === currentProjectId);
+
+  // TODO loading indicator
+  useEffect(() => {
+    // Make backend API request
+    const formData = new FormData();
+
+    formData.append("referenceImage", searchParams.get("referenceImage") || "");
+    formData.append("shotSize", searchParams.get("shotSize") || "");
+    formData.append("startYear", searchParams.get("startYear") || "");
+    formData.append("endYear", searchParams.get("endYear") || "");
+    formData.append("shotDescription", searchParams.get("shotDescription") || "");
+
+    fetch("/api/search", {
+      method: "POST",
+      body: formData,
+    })
+      .then((data) => data.json())
+      .then((data) => {
+        console.log("search results", data);
+        setMatchingShotIds(data);
+      });
+  }, [searchParams]);
 
   const isShotInProject = (shotId: string): boolean => {
     if (!currentProject) return false;
