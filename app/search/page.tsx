@@ -22,6 +22,8 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError } from "@/components/ui/field";
 
 import { fileToDataUrl } from "@/lib/utils";
+import { referenceImageAtom } from "@/lib/store";
+import { useAtom } from "jotai";
 
 const YEAR_OF_FIRST_MOVIE = 1878;
 const SHOT_SIZES = [
@@ -41,6 +43,7 @@ export default function SearchPage() {
   const [startYear, setStartYear] = useState<string>("");
   const [endYear, setEndYear] = useState<string>("");
   const [description, setDescription] = useState<string>("");
+  const [, setReferenceImage] = useAtom<string>(referenceImageAtom);
 
   const handleDrop = (files: File[]) => {
     console.log(files);
@@ -48,14 +51,15 @@ export default function SearchPage() {
   };
 
   const handleSearch = async () => {
-    // Build query parameters
-    const params = new URLSearchParams();
-
+    // Store file data url in atom because it can be too long for a search query param
     const fileDataUrl = (
       files && files.length > 0 ? await fileToDataUrl(files[0]) : ""
     ) as string;
 
-    if (files && files.length > 0) params.append("referenceImage", fileDataUrl)
+    if (files && files.length > 0) setReferenceImage(fileDataUrl)
+
+    // Build query parameters
+    const params = new URLSearchParams();
     if (shotSize) params.append("shotSize", shotSize);
     if (startYear) params.append("startYear", startYear);
     if (endYear) params.append("endYear", endYear);
