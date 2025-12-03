@@ -17,7 +17,7 @@ npm install
 
 Create a new `.env` file in the root of the repository. Copy over the contents of `.env.template`, but replace
 the environment variable values with actual values. For example, the `SHOT_SEARCH_SECRET_KEY` can be found
-on [Reagent](https://rea.gent/noggins/expected-ostrich-1034/use).
+on [Reagent](https://rea.gent/noggins/expected-ostrich-1034/use). The `GEMINI_API_KEY` is a Google Gemini API key.
 
 Run the development server:
 
