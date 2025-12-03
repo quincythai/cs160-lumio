@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import { useAtom } from "jotai";
 import { shotsAtom, type Shot } from "@/lib/atoms";
+import { projectsAtom } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 
 export default function EditShotPage() {
@@ -49,6 +50,8 @@ export default function EditShotPage() {
     }
     return defaultPresets;
   });
+
+  const [projects, setProjects] = useAtom(projectsAtom);
 
   // keep a ref to the edited preview img element for sizing when saving
   const editedImgRef = useRef<HTMLImageElement | null>(null);
@@ -158,9 +161,7 @@ export default function EditShotPage() {
       return;
     }
     try {
-      const raw = localStorage.getItem(PROJECTS_STORAGE_KEY);
-      const projects = raw ? (JSON.parse(raw) as Array<{ id: string; name: string }>) : [];
-      if (projects.length === 0) {
+      if (!projects || projects.length === 0) {
         alert("No projects found. Create a project first in Saved.");
         return;
       }
@@ -172,11 +173,30 @@ export default function EditShotPage() {
         alert("Project id not found.");
         return;
       }
-      const newShot = { id: crypto.randomUUID(), url, modifiedAt: new Date().toISOString() } as any;
+
+      const newShot = {
+        id: crypto.randomUUID(),
+        url: url,
+        imageUrl: url,
+        title: "",
+        year: "",
+        timestamp: new Date().toISOString(),
+        notes: "",
+      } as any;
+
+      // Update projectsAtom (Saved page canonical source)
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.id === found.id ? { ...p, shots: [...p.shots, newShot], updatedAt: new Date().toISOString() } : p
+        )
+      );
+
+      // Also keep shotsAtom in sync for other components using it
       setAllShots((prev) => {
         const prevList = prev[found.id] ?? [];
         return { ...prev, [found.id]: [...prevList, newShot] };
       });
+
       alert(`Saved to project "${found.name}".`);
     } catch (err) {
       console.error(err);
