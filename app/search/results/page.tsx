@@ -10,7 +10,7 @@ import { Plus, Check } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { Spinner } from "@/components/ui/spinner";
 
-import { projectsAtom, currentProjectIdAtom, type Shot } from "@/lib/store";
+import { projectsAtom, currentProjectIdAtom, type Shot, referenceImageAtom } from "@/lib/store";
 import shotMetadata from "@/shot-database/metadata.json";
 
 type ShotMetadata = {
@@ -37,6 +37,7 @@ export default function SearchResultsPage() {
   const projects = useAtomValue(projectsAtom);
   const [currentProjectId] = useAtom(currentProjectIdAtom);
   const [, setProjects] = useAtom(projectsAtom);
+  const referenceImage = useAtomValue(referenceImageAtom);
 
   const [loading, setLoading] = useState<boolean>(true);
   const [matchingShotIds, setMatchingShotIds] = useState<number[]>([]);
@@ -56,7 +57,7 @@ export default function SearchResultsPage() {
     // Make backend API request
     const formData = new FormData();
 
-    formData.append("referenceImage", searchParams.get("referenceImage") || "");
+    formData.append("referenceImage", referenceImage);
     formData.append("shotSize", searchParams.get("shotSize") || "");
     formData.append("startYear", searchParams.get("startYear") || "");
     formData.append("endYear", searchParams.get("endYear") || "");
@@ -74,7 +75,7 @@ export default function SearchResultsPage() {
         setMatchingShotIds(data.matchingShotIds);
         setLoading(false);
       });
-  }, [searchParams]);
+  }, [referenceImage, searchParams]);
 
   const isShotInProject = (shotId: string): boolean => {
     if (!currentProject) return false;
