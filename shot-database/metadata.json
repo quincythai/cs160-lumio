@@ -242,5 +242,211 @@
         "timestamp": "03:05:22",
         "description": ""
     },
-    // TODO make new fake timestamps, add descriptions
+    {
+        "id": 27,
+        "image_url": "https://film-grab.com/wp-content/uploads/2012/11/10.jpg",
+        "movie_title": "Jaws",
+        "year": 1975,
+        "shot_size": "medium close up",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 28,
+        "image_url": "https://film-grab.com/wp-content/uploads/2019/03/soundofmusic003.jpg",
+        "movie_title": "The Sound of Music",
+        "year": 1965,
+        "shot_size": "full shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 29,
+        "image_url": "https://media.npr.org/assets/img/2012/11/17/life-of-pi-lop-1_rgb_custom-b1fd7b5444e94c4b015456c3be17b254b0b9526e.jpg",
+        "movie_title": "The Life of Pi",
+        "year": 2012,
+        "shot_size": "full shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 30,
+        "image_url": "https://m.media-amazon.com/images/M/MV5BNjY4MTE4ODU3OF5BMl5BanBnXkFtZTcwNzYyODI1NA@@._V1_.jpg",
+        "movie_title": "Misery",
+        "year": 1990,
+        "shot_size": "medium full shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 31,
+        "image_url": "https://m.media-amazon.com/images/M/MV5BMjEzMTM3MDkyNF5BMl5BanBnXkFtZTYwMDc1NzY2._V1_.jpg",
+        "movie_title": "Men in Black II",
+        "year": 2002,
+        "shot_size": "cowboy shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 32,
+        "image_url": "https://film-grab.com/wp-content/uploads/2011/02/26-847.jpg",
+        "movie_title": "Pulp Fiction",
+        "year": 1994,
+        "shot_size": "full shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 33,
+        "image_url": "https://m.media-amazon.com/images/M/MV5BMTUxMjEzNzE1NF5BMl5BanBnXkFtZTgwNDYwNjUzMTI@._V1_QL75_UX389_.jpg",
+        "movie_title": "Get Out",
+        "year": 2017,
+        "shot_size": "medium close up",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 34,
+        "image_url": "https://m.media-amazon.com/images/M/MV5BNDc4MDc0NTY1Nl5BMl5BanBnXkFtZTgwMDQzOTEwMjE@._V1_.jpg",
+        "movie_title": "Lady and the Tramp",
+        "year": 1955,
+        "shot_size": "medium shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 35,
+        "image_url": "https://images.adsttc.com/media/images/55e6/c935/4d8d/5d9a/1500/0f64/large_jpg/inception-promo-stills-hq-dom-and-ariadne-17424209-720-480.jpg",
+        "movie_title": "Inception",
+        "year": 2010,
+        "shot_size": "full shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 36,
+        "image_url": "https://www.moma.org/d/assets/W1siZiIsIjIwMTkvMDIvMTQvOTY4dmNsOG9pZ19Ub19IYXZlX2FuZF9IYXZlX05vdF81LmpwZyJdLFsicCIsImNvbnZlcnQiLCItcXVhbGl0eSA5MCAtcmVzaXplIDc3NXg1MjVeIC1ncmF2aXR5IENlbnRlciAtY3JvcCA3NzV4NTI1KzArMCJdXQ/To-Have-and-Have-Not-5.jpg",
+        "movie_title": "To Have and Have Not",
+        "year": 1944,
+        "shot_size": "medium shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 37,
+        "image_url": "https://m.media-amazon.com/images/M/MV5BMTk1MDMzNDg2Nl5BMl5BanBnXkFtZTgwODg5MzA4MTE@._V1_.jpg",
+        "movie_title": "The Karate Kid",
+        "year": 1984,
+        "shot_size": "full shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 38,
+        "image_url": "https://m.media-amazon.com/images/M/MV5BMjA0MDIwMDYwNl5BMl5BanBnXkFtZTcwMjY0Mzg4Mw@@._V1_.jpg",
+        "movie_title": "The Godfather",
+        "year": 1972,
+        "shot_size": "medium close up",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 39,
+        "image_url": "https://lumiere-a.akamaihd.net/v1/images/star-wars-the-last-jedi-rey-2_303f736f.jpeg",
+        "movie_title": "The Last Jedi",
+        "year": 2017,
+        "shot_size": "full shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 40,
+        "image_url": "https://static01.nyt.com/images/2019/07/21/arts/21lionking-notebook1/21lionking-notebook1-superJumbo.jpg",
+        "movie_title": "The Lion King",
+        "year": 1994,
+        "shot_size": "full shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 41,
+        "image_url": "https://substackcdn.com/image/fetch/$s_!xPCv!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-e05bbc84-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2F8a79f7fa-79a1-4ef8-9139-f0879f79e72f_1280x720.jpeg",
+        "movie_title": "Kill Bill: Vol. 1",
+        "year": 2003,
+        "shot_size": "medium shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 42,
+        "image_url": "https://m.media-amazon.com/images/M/MV5BNGVkZmU5YzctOWIyOC00NjQ3LWEzNjgtYTY2MGFkZTkxOTkyXkEyXkFqcGc@._V1_.jpg",
+        "movie_title": "Everything Everywhere All At Once",
+        "year": 2022,
+        "shot_size": "medium close up",
+        "timestamp": "",
+        "description": ""
+    },
+    {
+        "id": 43,
+        "image_url": "https://m.media-amazon.com/images/M/MV5BNjUxMTYwOTA4NF5BMl5BanBnXkFtZTgwOTc5Nzc1NTM@._V1_.jpg",
+        "movie_title": "Mission: Impossible - Fallout",
+        "year": 2018,
+        "shot_size": "medium full shot",
+        "timestamp": "",
+        "description": ""
+    },
+    {
+        "id": 44,
+        "image_url": "https://static01.nyt.com/images/2019/10/10/arts/10parasitecoverpix/merlin_162276381_35b982ba-822c-4914-98b6-083a213beaec-superJumbo.jpg",
+        "movie_title": "Parasite",
+        "year": 2019,
+        "shot_size": "full shot",
+        "timestamp": "",
+        "description": ""
+    },
+    {
+        "id": 45,
+        "image_url": "https://m.media-amazon.com/images/M/MV5BMTU3OWQ5YmUtMWY0Mi00ZTI3LWJmN2YtNzJlNmFlZDkxMzUyXkEyXkFqcGc@._V1_.jpg",
+        "movie_title": "Knives Out",
+        "year": 2019,
+        "shot_size": "medium shot",
+        "timestamp": "",
+        "description": ""
+    },
+    {
+        "id": 46,
+        "image_url": "https://m.media-amazon.com/images/M/MV5BYmUyMTcxYzctYTBjOS00OTExLWFiNTAtMDczYTIzNTQ3OTYzXkEyXkFqcGdeQWRvb2xpbmhk._V1_.jpg",
+        "movie_title": "Puss in Boots: The Last Wish",
+        "year": 2022,
+        "shot_size": "medium close up",
+        "timestamp": "",
+        "description": ""
+    },
+    {
+        "id": 47,
+        "image_url": "https://ichef.bbci.co.uk/ace/standard/976/cpsprodpb/9954/production/_89125293_an1-ff-006.jpg",
+        "movie_title": "Rogue One: A Star Wars Story",
+        "year": 2016,
+        "shot_size": "full shot",
+        "timestamp": "",
+        "description": ""
+    },
+    {
+        "id": 48,
+        "image_url": "https://m.media-amazon.com/images/M/MV5BNTA4MTYxMTM5OF5BMl5BanBnXkFtZTgwNjgyODI4NjM@._V1_.jpg",
+        "movie_title": "Spider-Man: Into the Spider-Verse",
+        "year": 2018,
+        "shot_size": "full shot",
+        "timestamp": "",
+        "description": ""
+    },
+    {
+        "id": 49,
+        "image_url": "https://m.media-amazon.com/images/M/MV5BNGRlZjVhNWMtOTUxYi00MTYxLWEzOWUtMTM1NDc3ZWRjMDZjXkEyXkFqcGdeQWRpZWdtb25n._V1_.jpg",
+        "movie_title": "12 Angry Men",
+        "year": 1957,
+        "shot_size": "medium shot",
+        "timestamp": "",
+        "description": ""
+    }
 ]
