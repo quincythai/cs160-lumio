@@ -38,3 +38,31 @@ export function formatDate(dateString: string): string {
     hour12: true,
   });
 }
+
+/**
+ * Converts a File object (from an input or drag-and-drop)
+ * into a Base64 encoded Data URL string.
+ * @param {File} file The File object to convert.
+ * @returns {Promise<string>} A promise that resolves with the Data URL string.
+ */
+export function fileToDataUrl(file: File) {
+  return new Promise((resolve, reject) => {
+    // 1. Create a new FileReader instance
+    const reader = new FileReader();
+
+    // 2. Define the callback for a successful read
+    reader.onload = (event) => {
+      // The result property contains the Data URL
+      resolve(event.target.result);
+    };
+
+    // 3. Define the callback for an error
+    reader.onerror = (error) => {
+      reject(error);
+    };
+
+    // 4. Start reading the file
+    // This is the method that initiates the conversion to a Data URL
+    reader.readAsDataURL(file);
+  });
+}

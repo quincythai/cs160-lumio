@@ -38,4 +38,3 @@ export const currentProjectIdAtom = atomWithStorage<string | null>(
   'lumio_current_project',
   DEFAULT_PROJECT_ID
 );
-
