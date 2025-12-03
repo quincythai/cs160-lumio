@@ -22,7 +22,7 @@ export default function EditShotPage() {
   const [initialOriginalUrl, setInitialOriginalUrl] = useState<string | null>(null);
   const [editedPreviewUrl, setEditedPreviewUrl] = useState<string | null>(null);
   const PRESETS_STORAGE_KEY = "lumio_presets_v1";
-  const PROJECTS_STORAGE_KEY = "lumio_projects_v1";
+  const PROJECTS_STORAGE_KEY = "lumio_projects_v2";
 
   type Preset = {
     id: string;
@@ -128,7 +128,10 @@ export default function EditShotPage() {
     if (!shot || !shot.url) return;
     // preserve previous edited preview so Undo can restore it
     setPrevEditedUrl(editedPreviewUrl ?? shot.url);
-    const dataUrl = await renderWithFiltersToDataUrl(editedPreviewUrl ?? shot.url);
+    // Use the original image as the rendering source to avoid re-applying
+    // previously baked edits (which would make the effect more dramatic).
+    const source = initialOriginalUrl ?? shot.url;
+    const dataUrl = await renderWithFiltersToDataUrl(source);
     if (!dataUrl) return;
     setEditedPreviewUrl(dataUrl);
   };
@@ -184,18 +187,37 @@ export default function EditShotPage() {
         notes: "",
       } as any;
 
-      // Update projectsAtom (Saved page canonical source)
-      setProjects((prev) =>
-        prev.map((p) =>
-          p.id === found.id ? { ...p, shots: [...p.shots, newShot], updatedAt: new Date().toISOString() } : p
-        )
+      // Prepare updated projects list and attempt to persist to storage first.
+      const nextProjects = projects.map((p) =>
+        p.id === found.id ? { ...p, shots: [...p.shots, newShot], updatedAt: new Date().toISOString() } : p
       );
 
-      // Also keep shotsAtom in sync for other components using it
-      setAllShots((prev) => {
-        const prevList = prev[found.id] ?? [];
-        return { ...prev, [found.id]: [...prevList, newShot] };
-      });
+      try {
+        // try writing to localStorage to detect quota issues early
+        const serialized = JSON.stringify(nextProjects);
+        try {
+          localStorage.setItem(PROJECTS_STORAGE_KEY, serialized);
+        } catch (err) {
+          // storage quota exceeded or other localStorage write error
+          console.error("Failed to persist projects to localStorage:", err);
+          alert(
+            "Unable to save project: local storage quota exceeded. Try removing some saved projects or images and try again."
+          );
+          return;
+        }
+
+        // If storage succeeded, update the atom so the UI state reflects the change.
+        setProjects(nextProjects);
+
+        // Also keep shotsAtom in sync for other components using it
+        setAllShots((prev: Record<string, any>) => {
+          const prevList = prev[found.id] ?? [];
+          return { ...prev, [found.id]: [...prevList, newShot] };
+        });
+      } catch (err) {
+        console.error("Failed to prepare project save:", err);
+        alert("Failed to save to project.");
+      }
 
       alert(`Saved to project "${found.name}".`);
     } catch (err) {
@@ -268,7 +290,7 @@ export default function EditShotPage() {
             <div className="border p-4 rounded bg-white relative">
               <img
                 ref={editedImgRef}
-                src={shot.url}
+                src={editedPreviewUrl ?? shot.url}
                 alt="Edited preview"
                 className="w-full h-56 object-contain rounded"
                 style={{
