@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useAtom, useAtomValue } from "jotai";
+import Image from "next/image";
+import { useSearchParams } from "next/navigation";
+
 import { Card } from "@/components/ui/card";
 import { Plus, Check } from "lucide-react";
-import Image from "next/image";
 import PageHeader from "@/components/PageHeader";
+import { Spinner } from "@/components/ui/spinner";
+
 import { projectsAtom, currentProjectIdAtom, type Shot } from "@/lib/store";
-import { useSearchParams } from "next/navigation";
 import shotMetadata from "@/shot-database/metadata.json";
 
 type ShotMetadata = {
@@ -48,7 +51,6 @@ export default function SearchResultsPage() {
 
   const currentProject = projects.find((p) => p.id === currentProjectId);
 
-  // TODO loading indicator
   useEffect(() => {
     // Make backend API request
     const formData = new FormData();
@@ -119,84 +121,90 @@ export default function SearchResultsPage() {
       <PageHeader title="Search results" />
 
       <div className="p-6">
-        {/* <div className="mb-6">
-          <Button
-            className="flex items-center gap-2"
-            style={{ backgroundColor: "#472d30", color: "#ffe1a8" }}
-          >
-            <Filter size={18} />
-            Filter
-          </Button>
-        </div> */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {searchResults.map((result) => (
-            <Card
-              key={result.id}
-              className="overflow-hidden border-2 hover:shadow-lg transition-shadow bg-white"
-              style={{ borderColor: "#472d30" }}
-            >
-              <div className="relative w-full aspect-video bg-gray-200">
-                <Image
-                  src={result.imageUrl}
-                  alt={result.title}
-                  fill
-                  className="object-cover"
-                  unoptimized
-                />
-              </div>
-              <div className="p-4 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3
-                      className="font-semibold text-lg"
-                      style={{ color: "#472d30" }}
-                    >
-                      {result.title}
-                    </h3>
-                    <span
-                      className="text-sm"
-                      style={{ color: "#472d30", opacity: 0.7 }}
-                    >
-                      {result.year}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleAddShot(result)}
-                      className="p-2 hover:bg-gray-100 rounded transition-colors"
-                      style={{
-                        color: isShotInProject(result.id)
-                          ? "#22c55e"
-                          : "#472d30",
-                      }}
-                      aria-label={
-                        isShotInProject(result.id)
-                          ? "Remove from project"
-                          : "Add to project"
-                      }
-                    >
-                      {isShotInProject(result.id) ? (
-                        <Check size={20} />
-                      ) : (
-                        <Plus size={20} />
-                      )}
-                    </button>
-                    {/* <button
+        {searchResults.length === 0 ? (
+          <div className="flex justify-center">
+            <Spinner className="size-25" />
+          </div>
+        ) : (
+          //   <div className="mb-6">
+          //   <Button
+          //     className="flex items-center gap-2"
+          //     style={{ backgroundColor: "#472d30", color: "#ffe1a8" }}
+          //   >
+          //     <Filter size={18} />
+          //     Filter
+          //   </Button>
+          // </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {searchResults.map((result) => (
+              <Card
+                key={result.id}
+                className="overflow-hidden border-2 hover:shadow-lg transition-shadow bg-white"
+                style={{ borderColor: "#472d30" }}
+              >
+                <div className="relative w-full aspect-video bg-gray-200">
+                  <Image
+                    src={result.imageUrl}
+                    alt={result.title}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
+                </div>
+                <div className="p-4 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3
+                        className="font-semibold text-lg"
+                        style={{ color: "#472d30" }}
+                      >
+                        {result.title}
+                      </h3>
+                      <span
+                        className="text-sm"
+                        style={{ color: "#472d30", opacity: 0.7 }}
+                      >
+                        {result.year}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleAddShot(result)}
+                        className="p-2 hover:bg-gray-100 rounded transition-colors"
+                        style={{
+                          color: isShotInProject(result.id)
+                            ? "#22c55e"
+                            : "#472d30",
+                        }}
+                        aria-label={
+                          isShotInProject(result.id)
+                            ? "Remove from project"
+                            : "Add to project"
+                        }
+                      >
+                        {isShotInProject(result.id) ? (
+                          <Check size={20} />
+                        ) : (
+                          <Plus size={20} />
+                        )}
+                      </button>
+                      {/* <button
                       className="p-2 hover:bg-gray-100 rounded transition-colors"
                       style={{ color: "#472d30" }}
                       aria-label="Download"
                     >
                       <Download size={20} />
                     </button> */}
+                    </div>
                   </div>
+                  <span className="text-sm" style={{ color: "#472d30" }}>
+                    {result.timestamp}
+                  </span>
                 </div>
-                <span className="text-sm" style={{ color: "#472d30" }}>
-                  {result.timestamp}
-                </span>
-              </div>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
