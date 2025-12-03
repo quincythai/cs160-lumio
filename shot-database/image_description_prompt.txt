@@ -1,0 +1,18 @@
+Model: gemini.google.com
+
+Prompt:
+
+<upload single image>
+
+Here is a shot from MOVIE_TITLE (YEAR). Describe the following about the shot in at most 1 paragraph:
+
+- What is happening in the shot
+- What character(s) are in the shot
+- What actor(s) are in the shot
+- The location (interior or exterior)
+- The time of day (day or night)
+- The mood or emotion evoked by the shot
+- The shot composition
+- The shot lighting
+- The shot colorin
+- Any other details you think would be relevant to a filmmaker
