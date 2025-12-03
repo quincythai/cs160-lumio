@@ -7,7 +7,18 @@ import { Plus, Check } from "lucide-react";
 import Image from "next/image";
 import PageHeader from "@/components/PageHeader";
 import { projectsAtom, currentProjectIdAtom, type Shot } from "@/lib/store";
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from "next/navigation";
+import shotMetadata from "@/shot-database/metadata.json";
+
+type ShotMetadata = {
+  id: number;
+  image_url: string;
+  movie_title: string;
+  year: number;
+  shot_size: string;
+  description: string;
+  timestamp: string;
+};
 
 type SearchResult = {
   id: string;
@@ -17,94 +28,6 @@ type SearchResult = {
   timestamp: string;
 };
 
-// Mock data for search results
-const mockResults: SearchResult[] = [
-  {
-    id: "1",
-    imageUrl: "https://placehold.co/400x300/472d30/ffe1a8?text=Shot+1",
-    title: "The Godfather",
-    year: 1972,
-    timestamp: "01:30:26",
-  },
-  {
-    id: "2",
-    imageUrl: "https://placehold.co/400x300/472d30/ffe1a8?text=Shot+2",
-    title: "Pulp Fiction",
-    year: 1994,
-    timestamp: "00:45:12",
-  },
-  {
-    id: "3",
-    imageUrl: "https://placehold.co/400x300/472d30/ffe1a8?text=Shot+3",
-    title: "The Shawshank Redemption",
-    year: 1994,
-    timestamp: "02:15:43",
-  },
-  {
-    id: "4",
-    imageUrl: "https://placehold.co/400x300/472d30/ffe1a8?text=Shot+4",
-    title: "Inception",
-    year: 2010,
-    timestamp: "00:23:58",
-  },
-  {
-    id: "5",
-    imageUrl: "https://placehold.co/400x300/472d30/ffe1a8?text=Shot+5",
-    title: "The Dark Knight",
-    year: 2008,
-    timestamp: "01:52:07",
-  },
-  {
-    id: "6",
-    imageUrl: "https://placehold.co/400x300/472d30/ffe1a8?text=Shot+6",
-    title: "Fight Club",
-    year: 1999,
-    timestamp: "00:38:34",
-  },
-  {
-    id: "7",
-    imageUrl: "https://placehold.co/400x300/472d30/ffe1a8?text=Shot+7",
-    title: "Forrest Gump",
-    year: 1994,
-    timestamp: "02:07:19",
-  },
-  {
-    id: "8",
-    imageUrl: "https://placehold.co/400x300/472d30/ffe1a8?text=Shot+8",
-    title: "The Matrix",
-    year: 1999,
-    timestamp: "01:14:52",
-  },
-  {
-    id: "9",
-    imageUrl: "https://placehold.co/400x300/472d30/ffe1a8?text=Shot+9",
-    title: "Goodfellas",
-    year: 1990,
-    timestamp: "00:56:28",
-  },
-  {
-    id: "10",
-    imageUrl: "https://placehold.co/400x300/472d30/ffe1a8?text=Shot+10",
-    title: "The Silence of the Lambs",
-    year: 1991,
-    timestamp: "01:41:15",
-  },
-  {
-    id: "11",
-    imageUrl: "https://placehold.co/400x300/472d30/ffe1a8?text=Shot+11",
-    title: "Se7en",
-    year: 1995,
-    timestamp: "00:12:47",
-  },
-  {
-    id: "12",
-    imageUrl: "https://placehold.co/400x300/472d30/ffe1a8?text=Shot+12",
-    title: "Interstellar",
-    year: 2014,
-    timestamp: "02:29:03",
-  },
-];
-
 export default function SearchResultsPage() {
   const searchParams = useSearchParams();
 
@@ -112,8 +35,16 @@ export default function SearchResultsPage() {
   const [currentProjectId] = useAtom(currentProjectIdAtom);
   const [, setProjects] = useAtom(projectsAtom);
 
-  // TODO display cards, make up timestamps
-  const [matchingShotIds, setMatchingShotIds] = useState([]);
+  const [matchingShotIds, setMatchingShotIds] = useState<number[]>([]);
+  const searchResults: SearchResult[] = shotMetadata
+    .filter((shot: ShotMetadata) => matchingShotIds.includes(shot.id))
+    .map((shot: ShotMetadata) => ({
+      id: String(shot.id),
+      imageUrl: shot.image_url,
+      title: shot.movie_title,
+      year: shot.year,
+      timestamp: shot.timestamp,
+    }));
 
   const currentProject = projects.find((p) => p.id === currentProjectId);
 
@@ -126,17 +57,17 @@ export default function SearchResultsPage() {
     formData.append("shotSize", searchParams.get("shotSize") || "");
     formData.append("startYear", searchParams.get("startYear") || "");
     formData.append("endYear", searchParams.get("endYear") || "");
-    formData.append("shotDescription", searchParams.get("shotDescription") || "");
+    formData.append(
+      "shotDescription",
+      searchParams.get("shotDescription") || ""
+    );
 
     fetch("/api/search", {
       method: "POST",
       body: formData,
     })
       .then((data) => data.json())
-      .then((data) => {
-        console.log("search results", data);
-        setMatchingShotIds(data);
-      });
+      .then((data) => setMatchingShotIds(data.matchingShotIds));
   }, [searchParams]);
 
   const isShotInProject = (shotId: string): boolean => {
@@ -198,7 +129,7 @@ export default function SearchResultsPage() {
           </Button>
         </div> */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {mockResults.map((result) => (
+          {searchResults.map((result) => (
             <Card
               key={result.id}
               className="overflow-hidden border-2 hover:shadow-lg transition-shadow bg-white"
