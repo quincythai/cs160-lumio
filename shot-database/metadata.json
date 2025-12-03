@@ -88,5 +88,159 @@
         "shot_size": "closeup",
         "timestamp": "03:05:22",
         "description": "This is an interior extreme close-up shot from The Shining, taking place inside the Overlook Hotel during the day, and it evokes a mood of manic terror, madness, and intense hostility. The shot features the character Jack Torrance, played by actor Jack Nicholson, who is seen peering through a large, jagged hole he has chopped into a white wooden door with an axe. Torrance's face dominates the center of the frame, twisted into a feral grin as he looks sideways with wide, manic eyes. He is sweaty and disheveled, with his hair matted to his forehead. The shot composition is an aggressively tight close-up, framed extremely narrowly by the splintered door jambs, which heightens the claustrophobic and menacing feeling. The shot lighting is bright and direct key lighting from the front right, illuminating his face and emphasizing the whites of his eyes and his unnatural, wide, sharp teeth. The coloring is high-saturation and warm, primarily focusing on the pinkish skin tones, the white of the door, and the dark plaid of his shirt. A critical filmmaking detail is the eye-level camera and direct address/gaze through the door, creating a terrifying intimacy and breaking the fourth wall of the immediate action."
-    }
+    },
+    {
+        "id": 10,
+        "image_url": "https://krui.fm/wordpress/wp-content/uploads/2017/11/titanic-cover-photo.jpg",
+        "movie_title": "Titanic",
+        "year": 1997,
+        "shot_size": "medium shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 11,
+        "image_url": "https://cdn.mos.cms.futurecdn.net/eq9MnZTEMoQ7LWjACSH3sS.jpg",
+        "movie_title": "Star Wars: Episode V - The Empire Strikes Back",
+        "year": 1980,
+        "shot_size": "full shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 12,
+        "image_url": "https://i.pinimg.com/736x/41/9b/49/419b497be4f9ce3b8472a4c4a6a70c60.jpg",
+        "movie_title": "The Great Gatsby",
+        "year": 2013,
+        "shot_size": "medium close up",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 13,
+        "image_url": "https://film-grab.com/wp-content/uploads/photo-gallery/02%20(645).jpg",
+        "movie_title": "Mad Max: Fury Road",
+        "year": 2015,
+        "shot_size": "full shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 14,
+        "image_url": "https://m.media-amazon.com/images/M/MV5BZTZmMjk0Y2YtOTU2OC00OTFhLWI3OWEtNzE5ZmJhNjljMjM2XkEyXkFqcGc@._V1_QL75_UX319_.jpg",
+        "movie_title": "Home Alone",
+        "year": 1990,
+        "shot_size": "cowboy shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 15,
+        "image_url": "https://media.timeout.com/images/101665669/image.jpg",
+        "movie_title": "The Wizard of Oz",
+        "year": 1939,
+        "shot_size": "full shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 16,
+        "image_url": "https://www.intofilm.org/intofilm-production/scaledcropped/1096x548https%3A/s3-eu-west-1.amazonaws.com/images.cdn.filmclub.org/film__17664-argo--hi_res-752292ad.jpg/film__17664-argo--hi_res-752292ad.jpg",
+        "movie_title": "Argo",
+        "year": 2012,
+        "shot_size": "full shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 17,
+        "image_url": "https://i.ytimg.com/vi/t86sKsR4pnk/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLAbK1rWi-JEGh2sb688SNYen5Xlhw",
+        "movie_title": "Iron Man",
+        "year": 2008,
+        "shot_size": "medium close up",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 18,
+        "image_url": "https://pics.filmaffinity.com/harry_potter_and_the_sorcerer_s_stone-150235751-large.jpg",
+        "movie_title": "Harry Potter and the Sorcerer's Stone",
+        "year": 2001,
+        "shot_size": "medium full shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 19,
+        "image_url": "https://theithacan.org/wp-content/uploads/2024/11/Anora.jpg",
+        "movie_title": "Anora",
+        "year": 2024,
+        "shot_size": "medium shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 20,
+        "image_url": "https://miro.medium.com/0*kGscVdG1LxbGbTOB.jpg",
+        "movie_title": "Breakfast at Tiffany's",
+        "year": 1961,
+        "shot_size": "medium close up",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 21,
+        "image_url": "https://m.media-amazon.com/images/M/MV5BMjM4MTg1MzM0Ml5BMl5BanBnXkFtZTgwNzE5MDQwMTE@._V1_.jpg",
+        "movie_title": "The Lego Movie",
+        "year": 2014,
+        "shot_size": "medium shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 22,
+        "image_url": "https://m.media-amazon.com/images/M/MV5BMTkzNjIxNTYyNF5BMl5BanBnXkFtZTcwNzUxNDczMw@@._V1_.jpg",
+        "movie_title": "Indiana Jones and the Last Crusade",
+        "year": 1989,
+        "shot_size": "medium shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 23,
+        "image_url": "https://i.ytimg.com/vi/tcZJqK3Cz24/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLBwVEyvc06hMJltRMJvTGTdDLvuIw",
+        "movie_title": "The Avengers",
+        "year": 2012,
+        "shot_size": "medium shot",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 24,
+        "image_url": "https://miro.medium.com/0*6BfqROgF3QNGr5tt.jpg",
+        "movie_title": "Almost Famous",
+        "year": 2000,
+        "shot_size": "medium close up",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 25,
+        "image_url": "https://miro.medium.com/0*6BfqROgF3QNGr5tt.jpg",
+        "movie_title": "Almost Famous",
+        "year": 2000,
+        "shot_size": "medium close up",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    {
+        "id": 26,
+        "image_url": "https://assets.americancinematheque.com/wp-content/uploads/2021/10/05144830/Taxi-Driver-HERO.jpg",
+        "movie_title": "Taxi Driver",
+        "year": 1976,
+        "shot_size": "medium close up",
+        "timestamp": "03:05:22",
+        "description": ""
+    },
+    // TODO make new fake timestamps, add descriptions
 ]
