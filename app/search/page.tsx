@@ -21,6 +21,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError } from "@/components/ui/field";
 
+import { useAtom } from 'jotai';
+import { searchResultsAtom } from "@/lib/store";
+import { fileToDataUrl } from "@/lib/utils";
+
 const YEAR_OF_FIRST_MOVIE = 1878;
 const SHOT_SIZES = [
   { label: "Extreme Close Up", value: "extreme close up" },
@@ -39,13 +43,35 @@ export default function SearchPage() {
   const [startYear, setStartYear] = useState<string>("");
   const [endYear, setEndYear] = useState<string>("");
   const [description, setDescription] = useState<string>("");
+  const [searchResults, setSearchResults] = useAtom<number[]>(searchResultsAtom);
 
   const handleDrop = (files: File[]) => {
     console.log(files);
     setFiles(files);
   };
 
-  const handleSearch = () => {
+  // TODO loading indicator
+  const handleSearch = async () => {
+    // TODO move this logic to search results page and pass params through search query params below
+    // Make backend API request
+    const formData = new FormData();
+    const fileDataUrl = (files && files.length > 0 ? await fileToDataUrl(files[0]) : "") as string;
+    formData.append("referenceImage", fileDataUrl);
+    formData.append("shotSize", shotSize);
+    formData.append("startYear", startYear);
+    formData.append("endYear", endYear);
+    formData.append("shotDescription", description);
+
+    await fetch("/api/search", {
+      method: "POST",
+      body: formData,
+    })
+      .then(data => data.json())
+      .then(data => {
+        console.log('search results', data);
+        setSearchResults(data);
+  });
+
     // Build query parameters
     const params = new URLSearchParams();
     if (shotSize) params.append("shotSize", shotSize);
@@ -207,6 +233,7 @@ export default function SearchPage() {
               onChange={(e) => setDescription(e.target.value)}
               className="bg-white"
             />
+            {/* TODO input validation: max 1000 characters */}
           </div>
         </div>
 
