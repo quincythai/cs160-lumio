@@ -21,7 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError } from "@/components/ui/field";
 
-import { useAtom } from 'jotai';
+import { useAtom } from "jotai";
 import { searchResultsAtom } from "@/lib/store";
 import { fileToDataUrl } from "@/lib/utils";
 
@@ -43,7 +43,8 @@ export default function SearchPage() {
   const [startYear, setStartYear] = useState<string>("");
   const [endYear, setEndYear] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [searchResults, setSearchResults] = useAtom<number[]>(searchResultsAtom);
+  const [searchResults, setSearchResults] =
+    useAtom<number[]>(searchResultsAtom);
 
   const handleDrop = (files: File[]) => {
     console.log(files);
@@ -55,7 +56,9 @@ export default function SearchPage() {
     // TODO move this logic to search results page and pass params through search query params below
     // Make backend API request
     const formData = new FormData();
-    const fileDataUrl = (files && files.length > 0 ? await fileToDataUrl(files[0]) : "") as string;
+    const fileDataUrl = (
+      files && files.length > 0 ? await fileToDataUrl(files[0]) : ""
+    ) as string;
     formData.append("referenceImage", fileDataUrl);
     formData.append("shotSize", shotSize);
     formData.append("startYear", startYear);
@@ -66,11 +69,11 @@ export default function SearchPage() {
       method: "POST",
       body: formData,
     })
-      .then(data => data.json())
-      .then(data => {
-        console.log('search results', data);
+      .then((data) => data.json())
+      .then((data) => {
+        console.log("search results", data);
         setSearchResults(data);
-  });
+      });
 
     // Build query parameters
     const params = new URLSearchParams();
@@ -137,11 +140,17 @@ export default function SearchPage() {
   };
 
   const isSearchFormInvalid = () => {
-    if ((files && files.length > 0) || shotSize || startYear || endYear || description) {
+    if (
+      (files && files.length > 0) ||
+      shotSize ||
+      startYear ||
+      endYear ||
+      description
+    ) {
       return false;
     }
     return true;
-  }
+  };
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
@@ -222,18 +231,31 @@ export default function SearchPage() {
 
           <div className="col-span-1">Description</div>
           <div className="col-span-4">
-            <Label htmlFor="description" className="pb-2">
-              What does your shot look or feel like? Let your imagination run
-              wild!
-            </Label>
-            <Textarea
-              id="description"
-              placeholder="A dark and stormy night"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="bg-white"
-            />
-            {/* TODO input validation: max 1000 characters */}
+            <Field data-invalid={description.length > 1000}>
+              <Label htmlFor="description" className="pb-2">
+                What does your shot look or feel like? Let your imagination run
+                wild!
+              </Label>
+              <Textarea
+                id="description"
+                placeholder="A dark and stormy night"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="bg-white"
+              />
+              <FieldError
+                errors={
+                  description.length > 1000
+                    ? [
+                        {
+                          message:
+                            "Description must be 1000 characters or less",
+                        },
+                      ]
+                    : []
+                }
+              />
+            </Field>
           </div>
         </div>
 
@@ -241,12 +263,27 @@ export default function SearchPage() {
           <Button onClick={handleReset} variant="outline" type="reset">
             Reset
           </Button>
-          <Button onClick={handleSearch} type="submit" disabled={getStartYearFieldErrors().length > 0 || getEndYearFieldErrors().length > 0 || isSearchFormInvalid()}>
+          <Button
+            onClick={handleSearch}
+            type="submit"
+            disabled={
+              getStartYearFieldErrors().length > 0 ||
+              getEndYearFieldErrors().length > 0 ||
+              isSearchFormInvalid()
+            }
+          >
             Search
           </Button>
         </div>
 
-        {isSearchFormInvalid() && <FieldError errors={[{message: "Need to fill out at least 1 search query field"}]} className="flex justify-end" />}
+        {isSearchFormInvalid() && (
+          <FieldError
+            errors={[
+              { message: "Need to fill out at least 1 search query field" },
+            ]}
+            className="flex justify-end"
+          />
+        )}
       </div>
     </div>
   );
