@@ -245,7 +245,8 @@ export default function SearchPage() {
             disabled={
               getStartYearFieldErrors().length > 0 ||
               getEndYearFieldErrors().length > 0 ||
-              isSearchFormInvalid()
+              isSearchFormInvalid() ||
+              description.length > 1000
             }
           >
             Search
