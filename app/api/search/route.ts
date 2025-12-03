@@ -7,8 +7,8 @@ export async function POST(request: NextRequest) {
 
   const referenceImage = formData.get("referenceImage") as string | null; // expects data url
   const shotSize = formData.get("shotSize") as string | null;
-  const startYear = formData.get("startYear") as number | null;
-  const endYear = formData.get("endYear") as number | null;
+  const startYear = formData.get("startYear") as string | null;
+  const endYear = formData.get("endYear") as string | null;
   const shotDescription = formData.get("shotDescription") as string | null;
 
   if (!referenceImage && !shotSize && !startYear && !endYear && !shotDescription) {
@@ -23,15 +23,15 @@ export async function POST(request: NextRequest) {
         return true;
     }
 
-    if (startYear && endYear && (startYear <= shot.year && shot.year <= endYear)) {
+    if (startYear && endYear && (parseInt(startYear, 10) <= shot.year && shot.year <= parseInt(endYear, 10))) {
         return true;
     }
 
-    if (startYear && startYear <= shot.year) {
+    if (startYear && !endYear && parseInt(startYear, 10) <= shot.year) {
         return true;
     }
 
-    if (endYear && shot.year <= endYear) {
+    if (!startYear && endYear && shot.year <= parseInt(endYear, 10)) {
         return true;
     }
 
