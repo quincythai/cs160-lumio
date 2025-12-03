@@ -51,9 +51,11 @@ export function fileToDataUrl(file: File) {
     const reader = new FileReader();
 
     // 2. Define the callback for a successful read
-    reader.onload = (event) => {
+    reader.onload = (event: ProgressEvent<FileReader>) => {
       // The result property contains the Data URL
-      resolve(event.target.result);
+      const result = event.target?.result;
+      if (typeof result === "string") resolve(result);
+      else resolve("");
     };
 
     // 3. Define the callback for an error
