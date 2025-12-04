@@ -4,8 +4,8 @@ import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import PageHeader from "@/components/PageHeader";
 import { useAtom } from "jotai";
-import { shotsAtom, type Shot } from "@/lib/atoms";
-import { projectsAtom } from "@/lib/store";
+import { shotsAtom, type Shot, SHOTS_STORAGE_KEY } from "@/lib/atoms";
+import { projectsAtom, currentProjectIdAtom } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 
 export default function EditShotPage() {
@@ -52,6 +52,7 @@ export default function EditShotPage() {
   });
 
   const [projects, setProjects] = useAtom(projectsAtom);
+  const [currentProjectId] = useAtom(currentProjectIdAtom);
 
   // keep a ref to the edited preview img element for sizing when saving
   const editedImgRef = useRef<HTMLImageElement | null>(null);
@@ -122,6 +123,14 @@ export default function EditShotPage() {
     });
   };
 
+  // Fallback: wrap an external image URL in an SVG that applies CSS filters.
+  // This avoids touching pixel data on a tainted canvas and lets the browser render a filtered image.
+  const makeSvgFilterDataUrl = (imageUrl: string, b: number, s: number, v: number) => {
+    const filterCss = `filter:brightness(${b}%) saturate(${s}%)`;
+    const svg = `<?xml version='1.0' encoding='utf-8'?><svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800' viewBox='0 0 1200 800' preserveAspectRatio='xMidYMid slice'><style>img{${filterCss}}</style><image href='${imageUrl}' x='0' y='0' width='100%' height='100%' preserveAspectRatio='xMidYMid slice' style='${filterCss}'/></svg>`;
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  };
+
   // Save current slider edits into the shot (persist)
   // Save edits locally to the preview (does NOT modify saved shots)
   const saveEditsToPreview = async () => {
@@ -157,86 +166,125 @@ export default function EditShotPage() {
     setPrevEditedUrl(null);
   };
 
-  // Add current preview (or url) to a chosen project (prompt-based chooser)
-  const addToProjectFlow = (url?: string | null) => {
-    if (!url) {
-      alert("No image to add.");
+
+  // Reset edits to original image and clear edited preview
+  const resetEdits = () => {
+    if (!shot) return;
+    setEditedPreviewUrl(initialOriginalUrl ?? shot.url ?? null);
+    setBrightness(100);
+    setSaturation(100);
+    setVignette(0);
+    setPrevEditedUrl(null);
+  };
+
+  // Add the current preview (or original) to the currently selected project
+  const addToCurrentProject = async () => {
+    // Prefer an already-baked edited preview; otherwise bake from the original with current sliders
+    let source: string | null = null;
+    if (editedPreviewUrl && editedPreviewUrl.startsWith("data:")) {
+      source = editedPreviewUrl;
+    } else {
+      const orig = initialOriginalUrl ?? shot?.url;
+      if (!orig) {
+        alert("No image to add.");
+        return;
+      }
+      const baked = await renderWithFiltersToDataUrl(orig);
+      if (baked) {
+        source = baked;
+      } else {
+        source = makeSvgFilterDataUrl(orig, brightness, saturation, vignette);
+      }
+    }
+
+    const pid = currentProjectId ?? null;
+    if (!pid) {
+      alert("No current project selected. Select or create a project in Saved first.");
       return;
     }
-    try {
-      if (!projects || projects.length === 0) {
-        alert("No projects found. Create a project first in Saved.");
-        return;
-      }
-      const list = projects.map((p) => `${p.name} (${p.id})`).join("\n");
-      const pick = prompt(`Choose a project to save to by typing its id:\n\n${list}`, projects[0].id);
-      if (!pick) return;
-      const found = projects.find((p) => p.id === pick);
-      if (!found) {
-        alert("Project id not found.");
-        return;
-      }
 
-      const newShot = {
-        id: crypto.randomUUID(),
-        url: url,
-        imageUrl: url,
-        title: "",
-        year: "",
-        timestamp: new Date().toISOString(),
-        notes: "",
-      } as any;
+    const newId = crypto.randomUUID();
+    const newShotFull = {
+      id: newId,
+      imageUrl: source,
+      url: source,
+      title: "",
+      year: "",
+      timestamp: new Date().toISOString(),
+      notes: "",
+      ...(source.startsWith("data:") ? {} : { filters: { brightness, saturation, vignette } }),
+    } as any;
 
-      // Prepare updated projects list and attempt to persist to storage first.
-      const nextProjects = projects.map((p) =>
-        p.id === found.id ? { ...p, shots: [...p.shots, newShot], updatedAt: new Date().toISOString() } : p
-      );
+    // Small metadata to store in the project (avoid saving large data URLs here)
+    const newShotForProject = {
+      id: newId,
+      imageUrl: initialOriginalUrl ?? shot?.url ?? "",
+      title: "",
+      year: "",
+      timestamp: new Date().toISOString(),
+      notes: "",
+    } as any;
 
-      try {
-        // try writing to localStorage to detect quota issues early
-        const serialized = JSON.stringify(nextProjects);
+    // Move any existing data-URL images from projects into shotsAtom to free project storage
+    const nextAllShots = { ...allShots } as Record<string, any>;
+    const cleanedProjects = projects.map((p) => {
+      const nextShots = p.shots.map((s: any) => {
         try {
-          localStorage.setItem(PROJECTS_STORAGE_KEY, serialized);
-        } catch (err) {
-          // storage quota exceeded or other localStorage write error
-          console.error("Failed to persist projects to localStorage:", err);
-          alert(
-            "Unable to save project: local storage quota exceeded. Try removing some saved projects or images and try again."
-          );
-          return;
-        }
+          if (typeof s.imageUrl === "string" && s.imageUrl.startsWith("data:")) {
+            // ensure shotsAtom contains this image under the project's key
+            nextAllShots[p.id] = nextAllShots[p.id] ?? [];
+            const exists = nextAllShots[p.id].find((x: any) => String(x.id) === String(s.id));
+            if (!exists) {
+              nextAllShots[p.id].push({ ...s, url: s.imageUrl });
+            }
+            // replace project entry with lightweight reference (use original url if available)
+            return { ...s, imageUrl: s.url ?? "" };
+          }
+        } catch (_e) {}
+        return s;
+      });
+      return { ...p, shots: nextShots };
+    });
 
-        // If storage succeeded, update the atom so the UI state reflects the change.
-        setProjects(nextProjects);
+    // append newShotForProject to the selected project's metadata
+    const finalProjects = cleanedProjects.map((p) => (p.id === pid ? { ...p, shots: [...p.shots, newShotForProject], updatedAt: new Date().toISOString() } : p));
 
-        // Also keep shotsAtom in sync for other components using it
-        setAllShots((prev: Record<string, any>) => {
-          const prevList = prev[found.id] ?? [];
-          return { ...prev, [found.id]: [...prevList, newShot] };
-        });
-      } catch (err) {
-        console.error("Failed to prepare project save:", err);
-        alert("Failed to save to project.");
-      }
-
-      alert(`Saved to project "${found.name}".`);
-    } catch (err) {
-      console.error(err);
-      alert("Failed to save to project.");
+    // persist shotsAtom first (smaller data in projects helps avoid quota)
+    const updatedAllShots = { ...nextAllShots, [pid]: [...(nextAllShots[pid] ?? []), newShotFull] } as Record<string, any>;
+    setAllShots(updatedAllShots);
+    try {
+      localStorage.setItem(SHOTS_STORAGE_KEY, JSON.stringify(updatedAllShots));
+    } catch (_e) {
+      // ignore storage errors
     }
+
+    // now update projectsAtom with the cleaned & appended metadata (should be much smaller)
+    try {
+      setProjects(finalProjects);
+    } catch (err) {
+      console.error("Failed to update projects (quota?)", err);
+      alert("Unable to save to project: local storage quota exceeded. Try removing some saved projects or large images.");
+      return;
+    }
+
+    alert("Saved to current project.");
   };
 
   // reset sliders when the shotId (selected shot) changes
   // we intentionally do NOT clear `prevEditedUrl` when the image URL changes
   // so Undo can restore the previous generated version after `simulateGenerate`.
   useEffect(() => {
-    setBrightness(100);
-    setSaturation(100);
-    setVignette(0);
+    // initialize sliders from shot.filters if present, otherwise defaults
+    const f = (shot as any)?.filters;
+    setBrightness(f?.brightness ?? 100);
+    setSaturation(f?.saturation ?? 100);
+    setVignette(f?.vignette ?? 0);
     setPrevEditedUrl(null);
     // capture the original image URL when entering this shot edit page
     setInitialOriginalUrl(shot?.url ?? null);
-    setEditedPreviewUrl(shot?.url ?? null);
+    // If the shot has a baked data URL, show that as the edited preview; otherwise show original
+    const imageIsData = typeof (shot as any)?.imageUrl === "string" && (shot as any).imageUrl.startsWith("data:");
+    setEditedPreviewUrl(imageIsData ? (shot as any).imageUrl : shot?.url ?? null);
   }, [shotId]);
 
   // persist presets when they change
@@ -282,9 +330,6 @@ export default function EditShotPage() {
           <div className="flex-1">
             <div className="flex items-start justify-between">
               <h3 className="text-lg font-medium mb-2">Edited</h3>
-              <div className="flex gap-2">
-                <Button onClick={() => addToProjectFlow(editedPreviewUrl ?? shot.url)}>Add to Project</Button>
-              </div>
             </div>
 
             <div className="border p-4 rounded bg-white relative">
@@ -424,23 +469,12 @@ export default function EditShotPage() {
               </div>
 
               <div className="mt-4 flex flex-col gap-2">
-                <Button onClick={simulateGenerate} disabled={isGenerating}>
-                  {isGenerating ? "Generating…" : "Generate"}
-                </Button>
                 <div className="flex gap-2 mt-2">
-                  <Button onClick={saveEditsToPreview}>Save Image</Button>
-                  <Button onClick={() => { setBrightness(100); setSaturation(100); setVignette(0); setEditedPreviewUrl(initialOriginalUrl ?? shot.url ?? null); setPrevEditedUrl(null); }} variant="outline">
+                  <Button onClick={resetEdits} variant="outline">
                     Reset
                   </Button>
-                  <Button
-                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                      e.stopPropagation();
-                      if (!prevEditedUrl) return;
-                      undoGenerate();
-                    }}
-                    className={`ml-2 ${!prevEditedUrl ? "opacity-50" : ""}`}
-                  >
-                    Undo
+                  <Button onClick={addToCurrentProject} className="ml-2">
+                    Add to Project
                   </Button>
                 </div>
               </div>
