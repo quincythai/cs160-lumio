@@ -1,6 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Ultra } from "next/font/google";
+
+const ultra = Ultra({
+  weight: "400",
+  subsets: ["latin"],
+});
 
 interface PageHeaderProps {
   title: string;
@@ -13,7 +19,7 @@ export default function PageHeader({ title }: PageHeaderProps) {
     <div className="p-6">
       <button
         onClick={() => router.push("/")}
-        className="text-xl hover:underline"
+        className={`text-xl hover:underline cursor-pointer ${ultra.className}`}
         style={{ color: "#472d30" }}
       >
         Lumio

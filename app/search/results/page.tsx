@@ -125,7 +125,7 @@ export default function SearchResultsPage() {
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
       <PageHeader title="Search results" />
 
-      <div className="p-6">
+      <div className="p-8">
         {loading ? (
           <div className="flex justify-center">
             <Spinner className="size-25" />
@@ -178,7 +178,7 @@ export default function SearchResultsPage() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleAddShot(result)}
-                        className="p-2 hover:bg-gray-100 rounded transition-colors"
+                        className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer"
                         style={{
                           color: isShotInProject(result.id)
                             ? "#22c55e"

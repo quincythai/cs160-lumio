@@ -25,49 +25,52 @@ export default function Home() {
 
       <div className="flex gap-8">
         <button
-          className="px-16 py-8 rounded text-3xl"
+          className="group px-16 py-8 rounded text-3xl cursor-pointer relative transition-all duration-300 hover:shadow-lg hover:shadow-[#472d30]/30 overflow-hidden"
           style={{ backgroundColor: "#c9cba3", color: "#472d30" }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.backgroundColor = "#ffe1a8")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.backgroundColor = "#c9cba3")
-          }
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#ffe1a8";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "#c9cba3";
+          }}
           onClick={() => {
             router.push("/search");
           }}
         >
           Search shots
+          <span className="absolute bottom-0 left-0 w-0 h-1 bg-[#472d30] transition-all duration-300 group-hover:w-full"></span>
         </button>
         <button
-          className="px-16 py-8 rounded text-3xl"
+          className="group px-16 py-8 rounded text-3xl cursor-pointer relative transition-all duration-300 hover:shadow-lg hover:shadow-[#472d30]/30 overflow-hidden"
           style={{ backgroundColor: "#c9cba3", color: "#472d30" }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.backgroundColor = "#ffe1a8")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.backgroundColor = "#c9cba3")
-          }
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#ffe1a8";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "#c9cba3";
+          }}
           onClick={() => {
             router.push("/edit");
           }}
         >
           Edit Shots
+          <span className="absolute bottom-0 left-0 w-0 h-1 bg-[#472d30] transition-all duration-300 group-hover:w-full"></span>
         </button>
         <button
-          className="px-16 py-8 rounded text-3xl"
+          className="group px-16 py-8 rounded text-3xl cursor-pointer relative transition-all duration-300 hover:shadow-lg hover:shadow-[#472d30]/30 overflow-hidden"
           style={{ backgroundColor: "#c9cba3", color: "#472d30" }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.backgroundColor = "#ffe1a8")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.backgroundColor = "#c9cba3")
-          }
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#ffe1a8";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "#c9cba3";
+          }}
           onClick={() => {
             router.push("/saved");
           }}
         >
           Saved Shots
+          <span className="absolute bottom-0 left-0 w-0 h-1 bg-[#472d30] transition-all duration-300 group-hover:w-full"></span>
         </button>
       </div>
     </div>

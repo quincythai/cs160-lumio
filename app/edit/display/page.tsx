@@ -47,27 +47,29 @@ export default function DisplayPage() {
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
       <PageHeader title="Edit shots" />
 
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
-        <div className="mb-8">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8">
+        <div className="mb-8 max-w-full">
           <Image
             src={`/${imageName}`}
             alt="Uploaded image" // to make sure we are accessible
-            width={800}
-            height={600}
+            width={600}
+            height={450}
+            className="max-w-full h-auto object-contain"
+            style={{ maxHeight: "60vh" }}
           />
         </div>
 
         <div className="flex gap-4">
           <button
             onClick={() => router.push("/edit")}
-            className="px-6 py-3 rounded border-2 hover:underline"
+            className="px-6 py-3 rounded border-2 hover:underline cursor-pointer"
             style={{ borderColor: "#472d30", color: "#472d30" }}
           >
             ← Go back
           </button>
           <button
             onClick={handleConfirm}
-            className="px-6 py-3 rounded border-2 hover:underline"
+            className="px-6 py-3 rounded border-2 hover:underline cursor-pointer"
             style={{ borderColor: "#472d30", color: "#472d30" }}
           >
             ✓ Confirm
