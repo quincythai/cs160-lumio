@@ -481,7 +481,7 @@ export default function EditShotPage() {
               <img
                 src={initialOriginalUrl ?? shot.url}
                 alt="Original"
-                className="w-full h-56 object-cover rounded"
+                className="w-full h-56 object-contain rounded"
               />
             </div>
           </div>
