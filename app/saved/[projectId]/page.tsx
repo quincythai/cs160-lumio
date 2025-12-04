@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import PageHeader from "@/components/PageHeader";
 import { projectsAtom, currentProjectIdAtom } from "@/lib/store";
+import { shotsAtom, SHOTS_STORAGE_KEY } from "@/lib/atoms";
 
 export default function ProjectPage({
   params,
@@ -33,6 +34,7 @@ export default function ProjectPage({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
   const project = projects.find((p) => p.id === projectId);
+  const [allShots, setAllShots] = useAtom(shotsAtom);
   const shots = project?.shots || [];
 
   const [editedTitle, setEditedTitle] = useState("");
@@ -261,7 +263,14 @@ export default function ProjectPage({
           </p>
         )}
 
-        {shots.map((shot) => (
+        {shots.map((shot) => {
+          const atomShot = (allShots[projectId] ?? []).find((s: any) => String(s.id) === String(shot.id));
+          const src = atomShot?.imageUrl ?? (shot as any).imageUrl ?? (shot as any).url ?? "";
+          const f = atomShot?.filters ?? (shot as any).filters;
+          const isData = typeof src === "string" && src.startsWith("data:");
+          const filterStyle = !isData && f ? `brightness(${f.brightness}%) saturate(${f.saturation}%)` : undefined;
+
+          return (
           <Card
             key={shot.id}
             className="overflow-hidden border-2 hover:shadow-lg transition-shadow bg-white relative"
@@ -275,13 +284,62 @@ export default function ProjectPage({
             >
               <X size={18} />
             </button>
+            <button
+              onClick={() => {
+                const pid = projectId || "unsaved";
+
+                const projectShotsFromAtom = allShots[pid];
+                const projectShots = projectShotsFromAtom ?? project?.shots ?? [];
+                const exists = projectShots.find((s) => String(s.id) === String(shot.id));
+                if (exists) {
+                  // If the shot exists only in the project data (not in the atom), copy it into the atom
+                  if (!projectShotsFromAtom) {
+                    // normalize image path and fields
+                    let src = (shot as any).imageUrl ?? (shot as any).url ?? "";
+                    if (src && !src.startsWith("/") && !src.startsWith("http")) {
+                      src = `/shot-database/images/${src}`;
+                    }
+
+                    const normalized = {
+                      id: String(shot.id),
+                      url: src,
+                      imageUrl: src,
+                      title: shot.title ?? "",
+                      year: shot.year !== undefined ? String(shot.year) : "",
+                      timestamp: shot.timestamp ?? new Date().toISOString(),
+                      notes: shot.notes ?? "",
+                      ...(shot as any).filters ? { filters: (shot as any).filters } : {},
+                    } as any;
+
+                    const next = { ...allShots, [pid]: [...(allShots[pid] || []), normalized] };
+                    try {
+                      localStorage.setItem(SHOTS_STORAGE_KEY, JSON.stringify(next));
+                    } catch (err) {
+                      console.warn("Failed to persist shots to localStorage", err);
+                    }
+                    setAllShots(next);
+                    router.push(`/edit/${String(shot.id)}`);
+                    return;
+                  }
+
+                  router.push(`/edit/${String(shot.id)}`);
+                  return;
+                }
+
+              }}
+              className="absolute top-2 left-2 z-10 p-2 rounded-full bg-[#472d30] text-[#ffe1a8] hover:bg-white hover:text-[#472d30] shadow-md transition-colors"
+              aria-label="Edit shot"
+            >
+              Edit
+            </button>
             <div className="relative w-full aspect-video bg-gray-200">
               <Image
-                src={shot.imageUrl}
+                src={src}
                 alt={shot.title}
                 fill
                 className="object-cover"
                 unoptimized
+                style={filterStyle ? { filter: filterStyle } : undefined}
               />
             </div>
             <div className="p-4 flex flex-col gap-3">
@@ -318,7 +376,8 @@ export default function ProjectPage({
               </div>
             </div>
           </Card>
-        ))}
+        );
+        })}
       </div>
     </div>
   );

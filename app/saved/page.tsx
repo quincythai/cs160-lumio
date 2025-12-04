@@ -24,11 +24,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { projectsAtom, currentProjectIdAtom, type Project } from "@/lib/store";
+import { shotsAtom, SHOTS_STORAGE_KEY } from "@/lib/atoms";
 
 export default function SavedPage() {
   const router = useRouter();
   const [projects, setProjects] = useAtom(projectsAtom);
   const [currentProjectId, setCurrentProjectId] = useAtom(currentProjectIdAtom);
+  const [allShots] = useAtom(shotsAtom);
 
   const [newProjectName, setNewProjectName] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -211,20 +213,25 @@ export default function SavedPage() {
                   </div>
                 ) : (
                   <div className="h-full grid grid-cols-2 gap-1">
-                    {project.shots.slice(0, 4).map((shot) => (
-                      <div
-                        key={shot.id}
-                        className="relative w-full h-full bg-gray-200"
-                      >
-                        <Image
-                          src={shot.imageUrl}
-                          alt={shot.title}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                      </div>
-                    ))}
+                    {project.shots.slice(0, 4).map((shot) => {
+                      const atomShot = (allShots[project.id] ?? []).find((s: any) => String(s.id) === String(shot.id));
+                      const src = atomShot?.imageUrl ?? (shot as any).imageUrl ?? (shot as any).url ?? "";
+                      const f = atomShot?.filters ?? (shot as any).filters;
+                      const isData = typeof src === "string" && src.startsWith("data:");
+                      const filterStyle = !isData && f ? `brightness(${f.brightness}%) saturate(${f.saturation}%)` : undefined;
+                      return (
+                        <div key={shot.id} className="relative w-full h-full bg-gray-200">
+                          <Image
+                            src={src}
+                            alt={shot.title}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                            style={filterStyle ? { filter: filterStyle } : undefined}
+                          />
+                        </div>
+                      );
+                    })}
                     {project.shots.length > 4 && (
                       <div className="relative w-full h-full bg-sage/40 flex items-center justify-center">
                         <span
