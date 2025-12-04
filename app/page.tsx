@@ -2,6 +2,7 @@
 
 import { Ultra, Funnel_Display } from "next/font/google";
 import { useRouter } from "next/navigation";
+import CurrentProjectIndicator from "@/components/CurrentProjectIndicator";
 
 const ultra = Ultra({
   weight: "400",
@@ -15,7 +16,10 @@ const funnelDisplay = Funnel_Display({
 export default function Home() {
   const router = useRouter();
   return (
-    <div className={`flex flex-col items-center justify-center min-h-screen bg-white ${funnelDisplay.className}`}>
+    <div className={`flex flex-col items-center justify-center min-h-screen bg-white ${funnelDisplay.className} relative`}>
+      <div className="absolute top-6 right-6">
+        <CurrentProjectIndicator />
+      </div>
       <h1 className={`text-8xl font-bold mb-16 ${ultra.className}`} style={{ color: "#472d30" }}>
         Lumio
       </h1>
