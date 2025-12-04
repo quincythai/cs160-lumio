@@ -19,8 +19,12 @@ export default function EditShotPage() {
   const [vignette, setVignette] = useState<number>(0);
   const [prevEditedUrl, setPrevEditedUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [initialOriginalUrl, setInitialOriginalUrl] = useState<string | null>(null);
+  const [initialOriginalUrl, setInitialOriginalUrl] = useState<string | null>(
+    null
+  );
   const [editedPreviewUrl, setEditedPreviewUrl] = useState<string | null>(null);
+  const [promptText, setPromptText] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const PRESETS_STORAGE_KEY = "lumio_presets_v1";
   const PROJECTS_STORAGE_KEY = "lumio_projects_v2";
 
@@ -34,14 +38,35 @@ export default function EditShotPage() {
   };
 
   const defaultPresets: Preset[] = [
-    { id: "natural", name: "Natural", brightness: 50, saturation: 50, vignette: 0 },
-    { id: "bw", name: "Black-White", brightness: 100, saturation: 0, vignette: 10 },
-    { id: "custom1", name: "Custom1", brightness: 110, saturation: 140, vignette: 8 },
+    {
+      id: "natural",
+      name: "Natural",
+      brightness: 50,
+      saturation: 50,
+      vignette: 0,
+    },
+    {
+      id: "bw",
+      name: "Black-White",
+      brightness: 100,
+      saturation: 0,
+      vignette: 10,
+    },
+    {
+      id: "custom1",
+      name: "Custom1",
+      brightness: 110,
+      saturation: 140,
+      vignette: 8,
+    },
   ];
 
   const [presets, setPresets] = useState<Preset[]>(() => {
     try {
-      const raw = typeof window !== "undefined" ? localStorage.getItem(PRESETS_STORAGE_KEY) : null;
+      const raw =
+        typeof window !== "undefined"
+          ? localStorage.getItem(PRESETS_STORAGE_KEY)
+          : null;
       if (raw) {
         return JSON.parse(raw) as Preset[];
       }
@@ -59,7 +84,8 @@ export default function EditShotPage() {
 
   // Find shot anywhere in the projects map
   const { shot, projectId } = useMemo(() => {
-    if (!shotId) return { shot: null as Shot | null, projectId: null as string | null };
+    if (!shotId)
+      return { shot: null as Shot | null, projectId: null as string | null };
     for (const pid of Object.keys(allShots)) {
       const found = allShots[pid].find((s) => s.id === shotId);
       if (found) return { shot: found, projectId: pid };
@@ -74,7 +100,9 @@ export default function EditShotPage() {
       const dataUrl = reader.result as string;
       setAllShots((prev) => {
         const prevList = prev[projectId] ?? [];
-        const nextList = prevList.map((s) => (s.id === shotId ? { ...s, url: dataUrl } : s));
+        const nextList = prevList.map((s) =>
+          s.id === shotId ? { ...s, url: dataUrl } : s
+        );
         return { ...prev, [projectId]: nextList };
       });
       // when user replaces the file, reset sliders and clear previous generated state
@@ -87,7 +115,10 @@ export default function EditShotPage() {
   };
 
   // Apply current sliders to a canvas and return dataURL (used for Save and simulated Generate)
-  const renderWithFiltersToDataUrl = async (sourceUrl: string, extraFilters = "") => {
+  const renderWithFiltersToDataUrl = async (
+    sourceUrl: string,
+    extraFilters = ""
+  ) => {
     return new Promise<string | null>((resolve) => {
       const img = new Image();
       img.crossOrigin = "anonymous";
@@ -101,12 +132,20 @@ export default function EditShotPage() {
         if (!ctx) return resolve(null);
 
         // apply CSS-like filters via ctx.filter
-        ctx.filter = `brightness(${brightness}%) saturate(${saturation}%) ${extraFilters}`.trim();
+        ctx.filter =
+          `brightness(${brightness}%) saturate(${saturation}%) ${extraFilters}`.trim();
         ctx.drawImage(img, 0, 0, w, h);
 
         // apply vignette as a radial gradient overlay
         if (vignette > 0) {
-          const grad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) / 1.2);
+          const grad = ctx.createRadialGradient(
+            w / 2,
+            h / 2,
+            0,
+            w / 2,
+            h / 2,
+            Math.max(w, h) / 1.2
+          );
           // vignette intensity mapped to alpha
           const alpha = Math.min(0.9, vignette / 100);
           grad.addColorStop(0, `rgba(0,0,0,0)`);
@@ -125,7 +164,12 @@ export default function EditShotPage() {
 
   // Fallback: wrap an external image URL in an SVG that applies CSS filters.
   // This avoids touching pixel data on a tainted canvas and lets the browser render a filtered image.
-  const makeSvgFilterDataUrl = (imageUrl: string, b: number, s: number, v: number) => {
+  const makeSvgFilterDataUrl = (
+    imageUrl: string,
+    b: number,
+    s: number,
+    v: number
+  ) => {
     const filterCss = `filter:brightness(${b}%) saturate(${s}%)`;
     const svg = `<?xml version='1.0' encoding='utf-8'?><svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800' viewBox='0 0 1200 800' preserveAspectRatio='xMidYMid slice'><style>img{${filterCss}}</style><image href='${imageUrl}' x='0' y='0' width='100%' height='100%' preserveAspectRatio='xMidYMid slice' style='${filterCss}'/></svg>`;
     return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
@@ -145,19 +189,106 @@ export default function EditShotPage() {
     setEditedPreviewUrl(dataUrl);
   };
 
-  // Simulate AI generation: store previous edited url and replace with a generated variant
-  const simulateGenerate = async () => {
-    if (!shot || !shot.url) return;
-    setIsGenerating(true);
-    // preserve previous edited preview
-    setPrevEditedUrl(editedPreviewUrl ?? shot.url ?? null);
-    // simulate generation from the current edited preview (or original if none)
-    const source = editedPreviewUrl ?? shot.url!;
-    const generated = await renderWithFiltersToDataUrl(source, "blur(0px)");
-    if (generated) {
-      setEditedPreviewUrl(generated);
+  // Helper function to convert image URL to data URL
+  const convertImageToDataUrl = async (imageUrl: string): Promise<string> => {
+    // If it's already a data URL, return it
+    if (imageUrl.startsWith("data:")) {
+      return imageUrl;
     }
-    setIsGenerating(false);
+
+    // Otherwise, fetch the image and convert to data URL
+    try {
+      // Handle relative URLs by converting to absolute
+      const absoluteUrl = imageUrl.startsWith("/")
+        ? `${window.location.origin}${imageUrl}`
+        : imageUrl;
+
+      const response = await fetch(absoluteUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.statusText}`);
+      }
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result;
+          if (typeof result === "string") {
+            resolve(result);
+          } else {
+            reject(new Error("Failed to convert image to data URL"));
+          }
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      throw new Error(`Failed to load image: ${error}`);
+    }
+  };
+
+  // AI generation using Vertex AI: store previous edited url and replace with AI-edited image
+  const generateWithAI = async () => {
+    if (!shot || !shot.url || !promptText.trim()) {
+      setErrorMessage("Please enter a prompt describing the edit you want.");
+      return;
+    }
+
+    setIsGenerating(true);
+    setErrorMessage(null);
+
+    // preserve previous edited preview for undo
+    setPrevEditedUrl(editedPreviewUrl ?? shot.url ?? null);
+
+    try {
+      // Get the current image to edit (use original or current edited preview)
+      const sourceImageUrl = initialOriginalUrl ?? shot.url;
+
+      // Convert image to data URL if needed
+      const imageDataUrl = await convertImageToDataUrl(sourceImageUrl);
+
+      // Create form data to send to API
+      const formData = new FormData();
+      formData.append("image", imageDataUrl);
+      formData.append("prompt", promptText.trim());
+
+      const response = await fetch("/api/edit-image", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        // Handle rate limit errors with a more user-friendly message
+        if (response.status === 429 || errorData.code === "RATE_LIMIT") {
+          throw new Error(
+            errorData.error ||
+              "Rate limit exceeded. Vertex AI is temporarily unavailable. Please wait a few minutes and try again."
+          );
+        }
+        throw new Error(errorData.error || `API error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.editedImage) {
+        throw new Error("No edited image received from API");
+      }
+
+      // Update the edited preview with the AI-generated image
+      setEditedPreviewUrl(data.editedImage);
+    } catch (error: any) {
+      console.error("Error generating AI edit:", error);
+      setErrorMessage(
+        error.message || "Failed to generate AI edit. Please try again."
+      );
+      // Restore previous state on error
+      if (prevEditedUrl) {
+        setEditedPreviewUrl(prevEditedUrl);
+        setPrevEditedUrl(null);
+      }
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const undoGenerate = () => {
@@ -165,7 +296,6 @@ export default function EditShotPage() {
     setEditedPreviewUrl(prevEditedUrl);
     setPrevEditedUrl(null);
   };
-
 
   // Reset edits to original image and clear edited preview
   const resetEdits = () => {
@@ -199,7 +329,9 @@ export default function EditShotPage() {
 
     const pid = currentProjectId ?? null;
     if (!pid) {
-      alert("No current project selected. Select or create a project in Saved first.");
+      alert(
+        "No current project selected. Select or create a project in Saved first."
+      );
       return;
     }
 
@@ -212,7 +344,9 @@ export default function EditShotPage() {
       year: "",
       timestamp: new Date().toISOString(),
       notes: "",
-      ...(source.startsWith("data:") ? {} : { filters: { brightness, saturation, vignette } }),
+      ...(source.startsWith("data:")
+        ? {}
+        : { filters: { brightness, saturation, vignette } }),
     } as any;
 
     // Small metadata to store in the project (avoid saving large data URLs here)
@@ -230,10 +364,15 @@ export default function EditShotPage() {
     const cleanedProjects = projects.map((p) => {
       const nextShots = p.shots.map((s: any) => {
         try {
-          if (typeof s.imageUrl === "string" && s.imageUrl.startsWith("data:")) {
+          if (
+            typeof s.imageUrl === "string" &&
+            s.imageUrl.startsWith("data:")
+          ) {
             // ensure shotsAtom contains this image under the project's key
             nextAllShots[p.id] = nextAllShots[p.id] ?? [];
-            const exists = nextAllShots[p.id].find((x: any) => String(x.id) === String(s.id));
+            const exists = nextAllShots[p.id].find(
+              (x: any) => String(x.id) === String(s.id)
+            );
             if (!exists) {
               nextAllShots[p.id].push({ ...s, url: s.imageUrl });
             }
@@ -247,10 +386,21 @@ export default function EditShotPage() {
     });
 
     // append newShotForProject to the selected project's metadata
-    const finalProjects = cleanedProjects.map((p) => (p.id === pid ? { ...p, shots: [...p.shots, newShotForProject], updatedAt: new Date().toISOString() } : p));
+    const finalProjects = cleanedProjects.map((p) =>
+      p.id === pid
+        ? {
+            ...p,
+            shots: [...p.shots, newShotForProject],
+            updatedAt: new Date().toISOString(),
+          }
+        : p
+    );
 
     // persist shotsAtom first (smaller data in projects helps avoid quota)
-    const updatedAllShots = { ...nextAllShots, [pid]: [...(nextAllShots[pid] ?? []), newShotFull] } as Record<string, any>;
+    const updatedAllShots = {
+      ...nextAllShots,
+      [pid]: [...(nextAllShots[pid] ?? []), newShotFull],
+    } as Record<string, any>;
     setAllShots(updatedAllShots);
     try {
       localStorage.setItem(SHOTS_STORAGE_KEY, JSON.stringify(updatedAllShots));
@@ -263,7 +413,9 @@ export default function EditShotPage() {
       setProjects(finalProjects);
     } catch (err) {
       console.error("Failed to update projects (quota?)", err);
-      alert("Unable to save to project: local storage quota exceeded. Try removing some saved projects or large images.");
+      alert(
+        "Unable to save to project: local storage quota exceeded. Try removing some saved projects or large images."
+      );
       return;
     }
 
@@ -283,8 +435,12 @@ export default function EditShotPage() {
     // capture the original image URL when entering this shot edit page
     setInitialOriginalUrl(shot?.url ?? null);
     // If the shot has a baked data URL, show that as the edited preview; otherwise show original
-    const imageIsData = typeof (shot as any)?.imageUrl === "string" && (shot as any).imageUrl.startsWith("data:");
-    setEditedPreviewUrl(imageIsData ? (shot as any).imageUrl : shot?.url ?? null);
+    const imageIsData =
+      typeof (shot as any)?.imageUrl === "string" &&
+      (shot as any).imageUrl.startsWith("data:");
+    setEditedPreviewUrl(
+      imageIsData ? (shot as any).imageUrl : shot?.url ?? null
+    );
   }, [shotId]);
 
   // persist presets when they change
@@ -322,7 +478,11 @@ export default function EditShotPage() {
           <div className="flex-1">
             <h3 className="text-lg font-medium mb-2">Original</h3>
             <div className="border p-4 rounded bg-white">
-              <img src={initialOriginalUrl ?? shot.url} alt="Original" className="w-full h-56 object-cover rounded" />
+              <img
+                src={initialOriginalUrl ?? shot.url}
+                alt="Original"
+                className="w-full h-56 object-cover rounded"
+              />
             </div>
           </div>
 
@@ -369,7 +529,9 @@ export default function EditShotPage() {
             <div className="md:col-span-2">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium">Brightness</label>
+                  <label className="block text-sm font-medium">
+                    Brightness
+                  </label>
                   <input
                     type="range"
                     min={50}
@@ -381,7 +543,9 @@ export default function EditShotPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium">Saturation</label>
+                  <label className="block text-sm font-medium">
+                    Saturation
+                  </label>
                   <input
                     type="range"
                     min={0}
@@ -429,7 +593,10 @@ export default function EditShotPage() {
                           setPresets((prev) => {
                             const next = prev.filter((x) => x.id !== p.id);
                             try {
-                              localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(next));
+                              localStorage.setItem(
+                                PRESETS_STORAGE_KEY,
+                                JSON.stringify(next)
+                              );
                             } catch (_e) {}
                             return next;
                           });
@@ -458,7 +625,10 @@ export default function EditShotPage() {
                     setPresets((prev) => {
                       const next = [...prev, newPreset];
                       try {
-                        localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(next));
+                        localStorage.setItem(
+                          PRESETS_STORAGE_KEY,
+                          JSON.stringify(next)
+                        );
                       } catch (_e) {}
                       return next;
                     });
@@ -473,6 +643,11 @@ export default function EditShotPage() {
                   <Button onClick={resetEdits} variant="outline">
                     Reset
                   </Button>
+                  {prevEditedUrl && (
+                    <Button onClick={undoGenerate} variant="outline">
+                      Undo AI Edit
+                    </Button>
+                  )}
                   <Button onClick={addToCurrentProject} className="ml-2">
                     Add to Project
                   </Button>
@@ -481,14 +656,42 @@ export default function EditShotPage() {
             </div>
           </div>
         </div>
-        
+
         {/* Free-text prompt area */}
         <div className="mt-6 w-full">
-          <label className="block font-medium mb-2">Tell us what you are going for</label>
+          <label className="block font-medium mb-2">
+            Tell us what you are going for
+          </label>
           <div className="flex items-center gap-2">
-            <input className="flex-1 p-3 rounded border bg-white" placeholder="Describe the look (e.g. brighter, softer shadows)" />
-            <button className="px-4 py-2 rounded bg-coral text-white" style={{ backgroundColor: '#e26d5c' }}>→</button>
+            <input
+              className="flex-1 p-3 rounded border bg-white"
+              placeholder="Describe the look (e.g. brighter, softer shadows, add a spotlight effect)"
+              value={promptText}
+              onChange={(e) => setPromptText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !isGenerating) {
+                  generateWithAI();
+                }
+              }}
+              disabled={isGenerating}
+            />
+            <button
+              className="px-4 py-2 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: "#e26d5c" }}
+              onClick={generateWithAI}
+              disabled={isGenerating || !promptText.trim()}
+            >
+              {isGenerating ? "..." : "→"}
+            </button>
           </div>
+          {errorMessage && (
+            <div className="mt-2 text-sm text-red-600">{errorMessage}</div>
+          )}
+          {isGenerating && (
+            <div className="mt-2 text-sm text-gray-600">
+              Generating AI edit...
+            </div>
+          )}
         </div>
 
         {/* AI-generated graph / metrics (placeholder) - below controls */}
