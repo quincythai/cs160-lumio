@@ -136,7 +136,7 @@ export default function SearchPage() {
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
       <PageHeader title="Search shots" />
 
-      <div className="pr-6 pl-6 min-h-[60vh]">
+      <div className="p-8 min-h-[60vh]">
         <h1 className="text-xl col-span-5 pb-5">
           <strong>
             Tell us what you&apos;re looking for or upload a similar shot

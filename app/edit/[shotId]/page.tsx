@@ -451,18 +451,27 @@ export default function EditShotPage() {
   }, [presets]);
 
   if (!shotId) {
-    return <div className="p-8">No shot specified.</div>;
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
+        <PageHeader title="Edit shot" />
+        <div className="p-8">
+          <p>No shot specified.</p>
+        </div>
+      </div>
+    );
   }
 
   if (!shot) {
     return (
-      <div className="p-8">
+      <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
         <PageHeader title="Edit shot" />
-        <p className="mt-6">Shot not found. It may have been deleted.</p>
-        <div className="mt-4">
-          <Button onClick={() => router.push("/saved")} className="mr-2">
-            Back to Saved
-          </Button>
+        <div className="p-8">
+          <p className="mt-6">Shot not found. It may have been deleted.</p>
+          <div className="mt-4">
+            <Button onClick={() => router.push("/saved")} className="mr-2">
+              Back to Saved
+            </Button>
+          </div>
         </div>
       </div>
     );

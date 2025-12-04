@@ -67,12 +67,10 @@ export default function SavedPage() {
   };
 
   return (
-    <div
-      className="min-h-screen p-10 max-w-7xl mx-auto"
-      style={{ backgroundColor: "#ffe1a8" }}
-    >
+    <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
       <PageHeader title="Saved shots" />
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
+      <div className="p-8 max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
         <div>
           <h1 className="text-3xl font-heading text-plum">Your Projects</h1>
           <p className="text-sm text-wine mt-1">
@@ -247,6 +245,7 @@ export default function SavedPage() {
               </div>
             </Card>
           ))}
+        </div>
       </div>
     </div>
   );

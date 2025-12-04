@@ -47,7 +47,7 @@ export default function DisplayPage() {
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
       <PageHeader title="Edit shots" />
 
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 py-8">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8">
         <div className="mb-8 max-w-full">
           <Image
             src={`/${imageName}`}
