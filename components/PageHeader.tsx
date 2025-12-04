@@ -18,23 +18,25 @@ export default function PageHeader({ title }: PageHeaderProps) {
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <button
-            onClick={() => router.push("/")}
-            className={`text-xl hover:underline cursor-pointer ${ultra.className}`}
-            style={{ color: "#472d30" }}
-          >
-            Lumio
-          </button>
-          <span className="text-xl" style={{ color: "#472d30" }}>
-            {" "}
-            | {title}
-          </span>
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between">
+          <div>
+            <button
+              onClick={() => router.push("/")}
+              className={`text-xl hover:underline cursor-pointer ${ultra.className}`}
+              style={{ color: "#472d30" }}
+            >
+              Lumio
+            </button>
+            <span className="text-xl" style={{ color: "#472d30" }}>
+              {" "}
+              | {title}
+            </span>
+          </div>
+          <CurrentProjectIndicator />
         </div>
-        <CurrentProjectIndicator />
+        <hr className="mt-4 mb-8" style={{ borderColor: "#472d30" }} />
       </div>
-      <hr className="mt-4 mb-8" style={{ borderColor: "#472d30" }} />
     </div>
   );
 }

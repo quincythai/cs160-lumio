@@ -125,7 +125,7 @@ export default function SearchResultsPage() {
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
       <PageHeader title="Search results" />
 
-      <div className="p-8">
+      <div className="p-8 max-w-7xl mx-auto">
         {loading ? (
           <div className="flex justify-center">
             <Spinner className="size-25" />

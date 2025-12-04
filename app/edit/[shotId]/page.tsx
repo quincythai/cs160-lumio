@@ -454,7 +454,7 @@ export default function EditShotPage() {
     return (
       <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
         <PageHeader title="Edit shot" />
-        <div className="p-8">
+        <div className="p-8 max-w-7xl mx-auto">
           <p>No shot specified.</p>
         </div>
       </div>
@@ -465,7 +465,7 @@ export default function EditShotPage() {
     return (
       <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
         <PageHeader title="Edit shot" />
-        <div className="p-8">
+        <div className="p-8 max-w-7xl mx-auto">
           <p className="mt-6">Shot not found. It may have been deleted.</p>
           <div className="mt-4">
             <Button onClick={() => router.push("/saved")} className="mr-2">
@@ -481,7 +481,7 @@ export default function EditShotPage() {
     <div className="min-h-screen p-8" style={{ backgroundColor: "#ffe1a8" }}>
       <PageHeader title="Edit shot" />
 
-      <div className="mt-8 w-full">
+      <div className="mt-8 w-full max-w-7xl mx-auto">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Original */}
           <div className="flex-1">

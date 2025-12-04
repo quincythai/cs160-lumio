@@ -35,7 +35,7 @@ export default function EditPage() {
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
       <PageHeader title="Edit shots" />
 
-      <div className="flex items-center justify-center min-h-[60vh] px-6">
+      <div className="flex items-center justify-center min-h-[60vh] px-6 max-w-7xl mx-auto">
         <Dropzone
           accept={{ "image/*": [] }}
           maxFiles={1}
