@@ -47,13 +47,15 @@ export default function DisplayPage() {
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
       <PageHeader title="Edit shots" />
 
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
-        <div className="mb-8">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 py-8">
+        <div className="mb-8 max-w-full">
           <Image
             src={`/${imageName}`}
             alt="Uploaded image" // to make sure we are accessible
-            width={800}
-            height={600}
+            width={600}
+            height={450}
+            className="max-w-full h-auto object-contain"
+            style={{ maxHeight: "60vh" }}
           />
         </div>
 
