@@ -211,7 +211,7 @@ export default function ProjectPage({
                 </h1>
                 <button
                   onClick={handleTitleEdit}
-                  className="p-1 hover:bg-gray-200 rounded transition-colors"
+                  className="p-1 hover:bg-gray-200 rounded transition-colors cursor-pointer"
                   style={{ color: "#472d30" }}
                   aria-label="Edit project name"
                 >
@@ -287,7 +287,7 @@ export default function ProjectPage({
               >
                 <button
                   onClick={() => handleRemoveShot(shot.id)}
-                  className="absolute top-2 right-2 z-10 p-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-colors"
+                  className="absolute top-2 right-2 z-10 p-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-colors cursor-pointer"
                   style={{ color: "#472d30" }}
                   aria-label="Remove shot from project"
                 >
@@ -355,7 +355,7 @@ export default function ProjectPage({
                       return;
                     }
                   }}
-                  className="absolute top-2 left-2 z-10 p-2 rounded-full bg-[#472d30] text-[#ffe1a8] hover:bg-white hover:text-[#472d30] shadow-md transition-colors"
+                  className="absolute top-2 left-2 z-10 p-2 rounded-full bg-[#472d30] text-[#ffe1a8] hover:bg-white hover:text-[#472d30] shadow-md transition-colors cursor-pointer"
                   aria-label="Edit shot"
                 >
                   Edit

@@ -585,7 +585,7 @@ export default function EditShotPage() {
                 {presets.map((p) => (
                   <div key={p.id} className="relative">
                     <button
-                      className="px-3 py-1 rounded bg-gray-200"
+                      className="px-3 py-1 rounded bg-gray-200 cursor-pointer"
                       onClick={() => {
                         setBrightness(p.brightness);
                         setSaturation(p.saturation);
@@ -610,7 +610,7 @@ export default function EditShotPage() {
                             return next;
                           });
                         }}
-                        className="absolute -top-2 -right-2 bg-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
+                        className="absolute -top-2 -right-2 bg-white rounded-full w-5 h-5 text-xs flex items-center justify-center cursor-pointer"
                       >
                         ×
                       </button>
@@ -618,7 +618,7 @@ export default function EditShotPage() {
                   </div>
                 ))}
                 <button
-                  className="px-3 py-1 rounded bg-green-200 ml-2"
+                  className="px-3 py-1 rounded bg-green-200 ml-2 cursor-pointer"
                   onClick={() => {
                     // Save current slider settings as a custom preset
                     const name = prompt("Preset name:");
@@ -685,7 +685,7 @@ export default function EditShotPage() {
               disabled={isGenerating}
             />
             <button
-              className="px-4 py-2 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               style={{ backgroundColor: "#e26d5c" }}
               onClick={generateWithAI}
               disabled={isGenerating || !promptText.trim()}

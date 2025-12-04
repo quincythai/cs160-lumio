@@ -62,14 +62,14 @@ export default function DisplayPage() {
         <div className="flex gap-4">
           <button
             onClick={() => router.push("/edit")}
-            className="px-6 py-3 rounded border-2 hover:underline"
+            className="px-6 py-3 rounded border-2 hover:underline cursor-pointer"
             style={{ borderColor: "#472d30", color: "#472d30" }}
           >
             ← Go back
           </button>
           <button
             onClick={handleConfirm}
-            className="px-6 py-3 rounded border-2 hover:underline"
+            className="px-6 py-3 rounded border-2 hover:underline cursor-pointer"
             style={{ borderColor: "#472d30", color: "#472d30" }}
           >
             ✓ Confirm
