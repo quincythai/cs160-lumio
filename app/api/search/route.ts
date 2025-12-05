@@ -88,7 +88,5 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // TODO implement sorting by year or title
-  // TODO why doesn't this work? .sort((shotId1, shotId2) => shotMetadata[shotId1].year - shotMetadata[shotId2].year)
   return NextResponse.json({ matchingShotIds: Array.from(matchingShotIds) });
 }
