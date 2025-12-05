@@ -24,11 +24,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { projectsAtom, currentProjectIdAtom, type Project } from "@/lib/store";
+import { shotsAtom, SHOTS_STORAGE_KEY } from "@/lib/atoms";
 
 export default function SavedPage() {
   const router = useRouter();
   const [projects, setProjects] = useAtom(projectsAtom);
   const [currentProjectId, setCurrentProjectId] = useAtom(currentProjectIdAtom);
+  const [allShots] = useAtom(shotsAtom);
 
   const [newProjectName, setNewProjectName] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -65,12 +67,10 @@ export default function SavedPage() {
   };
 
   return (
-    <div
-      className="min-h-screen p-10 max-w-7xl mx-auto"
-      style={{ backgroundColor: "#ffe1a8" }}
-    >
+    <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
       <PageHeader title="Saved shots" />
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
+      <div className="p-8 max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
         <div>
           <h1 className="text-3xl font-heading text-plum">Your Projects</h1>
           <p className="text-sm text-wine mt-1">
@@ -211,20 +211,25 @@ export default function SavedPage() {
                   </div>
                 ) : (
                   <div className="h-full grid grid-cols-2 gap-1">
-                    {project.shots.slice(0, 4).map((shot) => (
-                      <div
-                        key={shot.id}
-                        className="relative w-full h-full bg-gray-200"
-                      >
-                        <Image
-                          src={shot.imageUrl}
-                          alt={shot.title}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                      </div>
-                    ))}
+                    {project.shots.slice(0, 4).map((shot) => {
+                      const atomShot = (allShots[project.id] ?? []).find((s: any) => String(s.id) === String(shot.id));
+                      const src = atomShot?.imageUrl ?? (shot as any).imageUrl ?? (shot as any).url ?? "";
+                      const f = atomShot?.filters ?? (shot as any).filters;
+                      const isData = typeof src === "string" && src.startsWith("data:");
+                      const filterStyle = !isData && f ? `brightness(${f.brightness}%) saturate(${f.saturation}%)` : undefined;
+                      return (
+                        <div key={shot.id} className="relative w-full h-full bg-gray-200">
+                          <Image
+                            src={src}
+                            alt={shot.title}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                            style={filterStyle ? { filter: filterStyle } : undefined}
+                          />
+                        </div>
+                      );
+                    })}
                     {project.shots.length > 4 && (
                       <div className="relative w-full h-full bg-sage/40 flex items-center justify-center">
                         <span
@@ -240,6 +245,7 @@ export default function SavedPage() {
               </div>
             </Card>
           ))}
+        </div>
       </div>
     </div>
   );

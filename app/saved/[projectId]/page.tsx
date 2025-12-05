@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import PageHeader from "@/components/PageHeader";
 import { projectsAtom, currentProjectIdAtom } from "@/lib/store";
+import { shotsAtom, SHOTS_STORAGE_KEY } from "@/lib/atoms";
 
 export default function ProjectPage({
   params,
@@ -33,6 +34,7 @@ export default function ProjectPage({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
   const project = projects.find((p) => p.id === projectId);
+  const [allShots, setAllShots] = useAtom(shotsAtom);
   const shots = project?.shots || [];
 
   const [editedTitle, setEditedTitle] = useState("");
@@ -153,172 +155,260 @@ export default function ProjectPage({
 
   if (!project) {
     return (
-      <div className="min-h-screen p-10" style={{ backgroundColor: "#ffe1a8" }}>
+      <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
         <PageHeader title="Saved shots" />
-        <p className="text-wine text-lg">Project not found</p>
+        <div className="p-8">
+          <p className="text-wine text-lg">Project not found</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div
-      className="min-h-screen p-10 space-y-8"
-      style={{ backgroundColor: "#ffe1a8" }}
-    >
+    <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
       <PageHeader title="Saved shots" />
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex items-center gap-4">
-          {isEditingTitle ? (
-            <div className="flex items-center gap-2">
-              <Input
-                value={editedTitle}
-                onChange={(e) => setEditedTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleTitleSave();
-                  } else if (e.key === "Escape") {
-                    handleTitleCancel();
-                  }
-                }}
-                className="text-3xl font-heading"
-                style={{ color: "#472d30" }}
-                autoFocus
-              />
-              <Button
-                onClick={handleTitleSave}
-                className="px-3 py-1 text-sm"
-                style={{ backgroundColor: "#472d30", color: "#ffe1a8" }}
-              >
-                Save
-              </Button>
-              <Button
-                onClick={handleTitleCancel}
-                className="px-3 py-1 text-sm bg-transparent border"
-                style={{ borderColor: "#472d30", color: "#472d30" }}
-              >
-                Cancel
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <h1
-                className="text-3xl font-heading text-plum cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={handleTitleEdit}
-              >
-                {project.name}
-              </h1>
-              <button
-                onClick={handleTitleEdit}
-                className="p-1 hover:bg-gray-200 rounded transition-colors"
-                style={{ color: "#472d30" }}
-                aria-label="Edit project name"
-              >
-                <Edit2 size={18} />
-              </button>
-            </div>
-          )}
-          <Button
-            onClick={handleExport}
-            className="flex items-center gap-2"
-            style={{ backgroundColor: "#472d30", color: "#ffe1a8" }}
-          >
-            <Download size={18} />
-            Export
-          </Button>
-          {projects.length > 1 && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm" style={{ color: "#472d30" }}>
-                Switch to:
-              </span>
-              <Select
-                value={currentProjectId || undefined}
-                onValueChange={(value) => {
-                  setCurrentProjectId(value);
-                  router.push(`/saved/${value}`);
-                }}
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Select project" />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Shots Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {shots.length === 0 && (
-          <p className="text-wine text-lg">
-            No shots yet. Add shots from search results.
-          </p>
-        )}
-
-        {shots.map((shot) => (
-          <Card
-            key={shot.id}
-            className="overflow-hidden border-2 hover:shadow-lg transition-shadow bg-white relative"
-            style={{ borderColor: "#472d30" }}
-          >
-            <button
-              onClick={() => handleRemoveShot(shot.id)}
-              className="absolute top-2 right-2 z-10 p-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-colors"
-              style={{ color: "#472d30" }}
-              aria-label="Remove shot from project"
-            >
-              <X size={18} />
-            </button>
-            <div className="relative w-full aspect-video bg-gray-200">
-              <Image
-                src={shot.imageUrl}
-                alt={shot.title}
-                fill
-                className="object-cover"
-                unoptimized
-              />
-            </div>
-            <div className="p-4 flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3
-                    className="font-semibold text-lg"
-                    style={{ color: "#472d30" }}
-                  >
-                    {shot.title}
-                  </h3>
-                  <span
-                    className="text-sm"
-                    style={{ color: "#472d30", opacity: 0.7 }}
-                  >
-                    {shot.year}
-                  </span>
-                </div>
-              </div>
-              <span className="text-sm" style={{ color: "#472d30" }}>
-                {shot.timestamp}
-              </span>
-              <div className="mt-2">
-                <Textarea
-                  placeholder="Add notes about this shot..."
-                  value={shot.notes || ""}
-                  onChange={(e) => handleNotesChange(shot.id, e.target.value)}
-                  className="w-full min-h-20 text-sm resize-none"
-                  style={{
-                    borderColor: "#472d30",
-                    color: "#472d30",
+      <div className="p-8 space-y-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center gap-4">
+            {isEditingTitle ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  value={editedTitle}
+                  onChange={(e) => setEditedTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleTitleSave();
+                    } else if (e.key === "Escape") {
+                      handleTitleCancel();
+                    }
                   }}
+                  className="text-3xl font-heading"
+                  style={{ color: "#472d30" }}
+                  autoFocus
                 />
+                <Button
+                  onClick={handleTitleSave}
+                  className="px-3 py-1 text-sm"
+                  style={{ backgroundColor: "#472d30", color: "#ffe1a8" }}
+                >
+                  Save
+                </Button>
+                <Button
+                  onClick={handleTitleCancel}
+                  className="px-3 py-1 text-sm bg-transparent border"
+                  style={{ borderColor: "#472d30", color: "#472d30" }}
+                >
+                  Cancel
+                </Button>
               </div>
-            </div>
-          </Card>
-        ))}
+            ) : (
+              <div className="flex items-center gap-2">
+                <h1
+                  className="text-3xl font-heading text-plum cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={handleTitleEdit}
+                >
+                  {project.name}
+                </h1>
+                <button
+                  onClick={handleTitleEdit}
+                  className="p-1 hover:bg-gray-200 rounded transition-colors cursor-pointer"
+                  style={{ color: "#472d30" }}
+                  aria-label="Edit project name"
+                >
+                  <Edit2 size={18} />
+                </button>
+              </div>
+            )}
+            <Button
+              onClick={handleExport}
+              className="flex items-center gap-2"
+              style={{ backgroundColor: "#472d30", color: "#ffe1a8" }}
+            >
+              <Download size={18} />
+              Export
+            </Button>
+            {projects.length > 1 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm" style={{ color: "#472d30" }}>
+                  Switch to:
+                </span>
+                <Select
+                  value={currentProjectId || undefined}
+                  onValueChange={(value) => {
+                    setCurrentProjectId(value);
+                    router.push(`/saved/${value}`);
+                  }}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Shots Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {shots.length === 0 && (
+            <p className="text-wine text-lg">
+              No shots yet. Add shots from search results.
+            </p>
+          )}
+
+          {shots.map((shot) => {
+            const atomShot = (allShots[projectId] ?? []).find(
+              (s: any) => String(s.id) === String(shot.id)
+            );
+            const src =
+              atomShot?.imageUrl ??
+              (shot as any).imageUrl ??
+              (shot as any).url ??
+              "";
+            const f = atomShot?.filters ?? (shot as any).filters;
+            const isData = typeof src === "string" && src.startsWith("data:");
+            const filterStyle =
+              !isData && f
+                ? `brightness(${f.brightness}%) saturate(${f.saturation}%)`
+                : undefined;
+
+            return (
+              <Card
+                key={shot.id}
+                className="overflow-hidden border-2 hover:shadow-lg transition-shadow bg-white relative"
+                style={{ borderColor: "#472d30" }}
+              >
+                <button
+                  onClick={() => handleRemoveShot(shot.id)}
+                  className="absolute top-2 right-2 z-10 p-2 rounded-full bg-white/90 hover:bg-white shadow-md transition-colors cursor-pointer"
+                  style={{ color: "#472d30" }}
+                  aria-label="Remove shot from project"
+                >
+                  <X size={18} />
+                </button>
+                <button
+                  onClick={() => {
+                    const pid = projectId || "unsaved";
+
+                    const projectShotsFromAtom = allShots[pid];
+                    const projectShots =
+                      projectShotsFromAtom ?? project?.shots ?? [];
+                    const exists = projectShots.find(
+                      (s) => String(s.id) === String(shot.id)
+                    );
+                    if (exists) {
+                      // If the shot exists only in the project data (not in the atom), copy it into the atom
+                      if (!projectShotsFromAtom) {
+                        // normalize image path and fields
+                        let src =
+                          (shot as any).imageUrl ?? (shot as any).url ?? "";
+                        if (
+                          src &&
+                          !src.startsWith("/") &&
+                          !src.startsWith("http")
+                        ) {
+                          src = `/shot-database/images/${src}`;
+                        }
+
+                        const normalized = {
+                          id: String(shot.id),
+                          url: src,
+                          imageUrl: src,
+                          title: shot.title ?? "",
+                          year:
+                            shot.year !== undefined ? String(shot.year) : "",
+                          timestamp: shot.timestamp ?? new Date().toISOString(),
+                          notes: shot.notes ?? "",
+                          ...((shot as any).filters
+                            ? { filters: (shot as any).filters }
+                            : {}),
+                        } as any;
+
+                        const next = {
+                          ...allShots,
+                          [pid]: [...(allShots[pid] || []), normalized],
+                        };
+                        try {
+                          localStorage.setItem(
+                            SHOTS_STORAGE_KEY,
+                            JSON.stringify(next)
+                          );
+                        } catch (err) {
+                          console.warn(
+                            "Failed to persist shots to localStorage",
+                            err
+                          );
+                        }
+                        setAllShots(next);
+                        router.push(`/edit/${String(shot.id)}`);
+                        return;
+                      }
+
+                      router.push(`/edit/${String(shot.id)}`);
+                      return;
+                    }
+                  }}
+                  className="absolute top-2 left-2 z-10 p-2 rounded-full bg-[#472d30] text-[#ffe1a8] hover:bg-white hover:text-[#472d30] shadow-md transition-colors cursor-pointer"
+                  aria-label="Edit shot"
+                >
+                  Edit
+                </button>
+                <div className="relative w-full aspect-video bg-gray-200">
+                  <Image
+                    src={src}
+                    alt={shot.title}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                    style={filterStyle ? { filter: filterStyle } : undefined}
+                  />
+                </div>
+                <div className="p-4 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3
+                        className="font-semibold text-lg"
+                        style={{ color: "#472d30" }}
+                      >
+                        {shot.title}
+                      </h3>
+                      <span
+                        className="text-sm"
+                        style={{ color: "#472d30", opacity: 0.7 }}
+                      >
+                        {shot.year}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-sm" style={{ color: "#472d30" }}>
+                    {shot.timestamp}
+                  </span>
+                  <div className="mt-2">
+                    <Textarea
+                      placeholder="Add notes about this shot..."
+                      value={shot.notes || ""}
+                      onChange={(e) =>
+                        handleNotesChange(shot.id, e.target.value)
+                      }
+                      className="w-full min-h-20 text-sm resize-none"
+                      style={{
+                        borderColor: "#472d30",
+                        color: "#472d30",
+                      }}
+                    />
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
