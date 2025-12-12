@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ArrowRight } from "lucide-react";
 
 export default function EditShotPage() {
   const params = useParams();
@@ -296,9 +297,9 @@ export default function EditShotPage() {
   const addToCurrentProject = async () => {
     // Determine if user has modified filter sliders from defaults
     const hasFilterChanges = brightness !== 100 || saturation !== 100 || vignette !== 0;
-    
+
     let source: string | null = null;
-    
+
     // If we have an AI-generated preview AND user has adjusted filters, bake filters on top of AI image
     if (editedPreviewUrl && editedPreviewUrl.startsWith("data:") && hasFilterChanges) {
       const baked = await renderWithFiltersToDataUrl(editedPreviewUrl);
@@ -308,11 +309,11 @@ export default function EditShotPage() {
         // Fallback: use SVG filter on the AI-generated image
         source = makeSvgFilterDataUrl(editedPreviewUrl, brightness, saturation, vignette);
       }
-    } 
+    }
     // If we have an AI-generated preview but NO filter changes, use it as-is
     else if (editedPreviewUrl && editedPreviewUrl.startsWith("data:")) {
       source = editedPreviewUrl;
-    } 
+    }
     // Otherwise bake from the original with current sliders
     else {
       const orig = initialOriginalUrl ?? shot?.url;
@@ -521,10 +522,10 @@ export default function EditShotPage() {
     const initOriginalUrl = imageIsData
       ? (shot as any).imageUrl
       : shot?.url ?? null;
-    
+
     // Capture the "original" for this editing session
     setInitialOriginalUrl(initOriginalUrl);
-    
+
     // Start with the same image in the edited preview
     setEditedPreviewUrl(initOriginalUrl);
     initialEditedPreviewUrl.current = initOriginalUrl;
@@ -977,11 +978,11 @@ export default function EditShotPage() {
             />
             <button
               className="px-4 py-2 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-              style={{ backgroundColor: "#e26d5c" }}
+              style={{ backgroundColor: "#e34931ff" }}
               onClick={generateWithAI}
               disabled={isGenerating || !promptText.trim()}
             >
-              {isGenerating ? "..." : "→"}
+              {isGenerating ? "..." : <ArrowRight />}
             </button>
           </div>
           {errorMessage && (
