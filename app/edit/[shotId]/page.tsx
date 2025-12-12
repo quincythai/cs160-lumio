@@ -7,6 +7,14 @@ import { useAtom } from "jotai";
 import { shotsAtom, type Shot, SHOTS_STORAGE_KEY } from "@/lib/atoms";
 import { projectsAtom, currentProjectIdAtom } from "@/lib/store";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function EditShotPage() {
   const params = useParams();
@@ -25,8 +33,20 @@ export default function EditShotPage() {
   const [editedPreviewUrl, setEditedPreviewUrl] = useState<string | null>(null);
   const [promptText, setPromptText] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
+  const pendingNavigationRef = useRef<string | null>(null);
+  const originalRouterPushRef = useRef<
+    ((href: string, options?: any) => void) | null
+  >(null);
+  const isConfirmingNavigationRef = useRef<boolean>(false);
   const PRESETS_STORAGE_KEY = "lumio_presets_v1";
   const PROJECTS_STORAGE_KEY = "lumio_projects_v2";
+
+  // Track initial values to detect unsaved changes
+  const initialBrightness = useRef<number>(100);
+  const initialSaturation = useRef<number>(100);
+  const initialVignette = useRef<number>(0);
+  const initialEditedPreviewUrl = useRef<string | null>(null);
 
   type Preset = {
     id: string;
@@ -300,11 +320,17 @@ export default function EditShotPage() {
   // Reset edits to original image and clear edited preview
   const resetEdits = () => {
     if (!shot) return;
-    setEditedPreviewUrl(initialOriginalUrl ?? shot.url ?? null);
+    const resetUrl = initialOriginalUrl ?? shot.url ?? null;
+    setEditedPreviewUrl(resetUrl);
     setBrightness(100);
     setSaturation(100);
     setVignette(0);
     setPrevEditedUrl(null);
+    // Reset initial values to mark as "saved"
+    initialBrightness.current = 100;
+    initialSaturation.current = 100;
+    initialVignette.current = 0;
+    initialEditedPreviewUrl.current = resetUrl;
   };
 
   // Add the current preview (or original) to the currently selected project
@@ -417,8 +443,14 @@ export default function EditShotPage() {
         id: s.id,
         imageUrl:
           typeof s.imageUrl === "string" && s.imageUrl.startsWith("data:")
-            ? (s.url && typeof s.url === "string" && !s.url.startsWith("data:") ? s.url : "")
-            : (typeof s.imageUrl === "string" ? s.imageUrl : (s.url && !String(s.url).startsWith("data:") ? s.url : "")),
+            ? s.url && typeof s.url === "string" && !s.url.startsWith("data:")
+              ? s.url
+              : ""
+            : typeof s.imageUrl === "string"
+            ? s.imageUrl
+            : s.url && !String(s.url).startsWith("data:")
+            ? s.url
+            : "",
         title: s.title ?? "",
         year: s.year ?? "",
         timestamp: s.timestamp ?? new Date().toISOString(),
@@ -438,7 +470,11 @@ export default function EditShotPage() {
         // If that fails, create an even smaller payload (drop imageUrl entirely)
         const tinyProjects = minimizedProjects.map((p) => ({
           ...p,
-          shots: p.shots.map((s: any) => ({ id: s.id, title: s.title, timestamp: s.timestamp })),
+          shots: p.shots.map((s: any) => ({
+            id: s.id,
+            title: s.title,
+            timestamp: s.timestamp,
+          })),
         }));
         setProjects(tinyProjects as any);
         alert(
@@ -457,7 +493,28 @@ export default function EditShotPage() {
     }
 
     alert("Saved to current project.");
+
+    // Mark as saved - reset initial values to current state
+    initialBrightness.current = brightness;
+    initialSaturation.current = saturation;
+    initialVignette.current = vignette;
+    initialEditedPreviewUrl.current = source;
   };
+
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = useMemo(() => {
+    const brightnessChanged = brightness !== initialBrightness.current;
+    const saturationChanged = saturation !== initialSaturation.current;
+    const vignetteChanged = vignette !== initialVignette.current;
+    const editedUrlChanged =
+      editedPreviewUrl !== initialEditedPreviewUrl.current;
+    return (
+      brightnessChanged ||
+      saturationChanged ||
+      vignetteChanged ||
+      editedUrlChanged
+    );
+  }, [brightness, saturation, vignette, editedPreviewUrl]);
 
   // reset sliders when the shotId (selected shot) changes
   // we intentionally do NOT clear `prevEditedUrl` when the image URL changes
@@ -465,20 +522,235 @@ export default function EditShotPage() {
   useEffect(() => {
     // initialize sliders from shot.filters if present, otherwise defaults
     const f = (shot as any)?.filters;
-    setBrightness(f?.brightness ?? 100);
-    setSaturation(f?.saturation ?? 100);
-    setVignette(f?.vignette ?? 0);
+    const initBrightness = f?.brightness ?? 100;
+    const initSaturation = f?.saturation ?? 100;
+    const initVignette = f?.vignette ?? 0;
+
+    setBrightness(initBrightness);
+    setSaturation(initSaturation);
+    setVignette(initVignette);
     setPrevEditedUrl(null);
+
+    // Store initial values for unsaved changes detection
+    initialBrightness.current = initBrightness;
+    initialSaturation.current = initSaturation;
+    initialVignette.current = initVignette;
+
     // capture the original image URL when entering this shot edit page
     setInitialOriginalUrl(shot?.url ?? null);
     // If the shot has a baked data URL, show that as the edited preview; otherwise show original
     const imageIsData =
       typeof (shot as any)?.imageUrl === "string" &&
       (shot as any).imageUrl.startsWith("data:");
-    setEditedPreviewUrl(
-      imageIsData ? (shot as any).imageUrl : shot?.url ?? null
-    );
+    const initEditedUrl = imageIsData
+      ? (shot as any).imageUrl
+      : shot?.url ?? null;
+    setEditedPreviewUrl(initEditedUrl);
+    initialEditedPreviewUrl.current = initEditedUrl;
   }, [shotId]);
+
+  // Handle browser navigation (refresh, close tab, etc.)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = ""; // Chrome requires returnValue to be set
+        return ""; // Some browsers require a return value
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
+
+  // Store original router.push on mount and restore on unmount
+  useEffect(() => {
+    // Store original router.push only once on mount
+    if (!originalRouterPushRef.current) {
+      originalRouterPushRef.current = router.push.bind(router);
+    }
+
+    return () => {
+      // Always restore original on unmount
+      if (originalRouterPushRef.current) {
+        (router as any).push = originalRouterPushRef.current;
+      }
+    };
+  }, [router]);
+
+  // Intercept router.push calls to check for unsaved changes
+  useEffect(() => {
+    // Ensure we have the original stored
+    if (!originalRouterPushRef.current) {
+      originalRouterPushRef.current = router.push.bind(router);
+    }
+
+    const originalPush = originalRouterPushRef.current;
+
+    if (!hasUnsavedChanges) {
+      // Restore original if it's currently overridden
+      // Check if current push is not the original (meaning it's overridden)
+      if ((router as any).push !== originalPush) {
+        (router as any).push = originalPush;
+      }
+      return;
+    }
+
+    // Override router.push to check for unsaved changes
+    (router as any).push = (href: string, options?: any) => {
+      // Allow navigation if we're explicitly confirming it
+      if (isConfirmingNavigationRef.current && originalPush) {
+        isConfirmingNavigationRef.current = false;
+        originalPush(href, options);
+        return;
+      }
+
+      // Check if this is a navigation we should intercept
+      if (href && (href.startsWith("/") || href.startsWith("http"))) {
+        pendingNavigationRef.current = href;
+        setShowUnsavedWarning(true);
+        return;
+      }
+      // For other cases, use original
+      if (originalPush) {
+        originalPush(href, options);
+      }
+    };
+
+    return () => {
+      // Restore original when effect cleans up or when hasUnsavedChanges becomes false
+      if (
+        originalRouterPushRef.current &&
+        (router as any).push !== originalRouterPushRef.current
+      ) {
+        (router as any).push = originalRouterPushRef.current;
+      }
+    };
+  }, [hasUnsavedChanges, router]);
+
+  // Handle browser back/forward buttons
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    const handlePopState = () => {
+      // Push the state back to prevent navigation
+      window.history.pushState(null, "", window.location.href);
+      pendingNavigationRef.current = "back";
+      setShowUnsavedWarning(true);
+    };
+
+    // Push a state to enable popstate detection
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [hasUnsavedChanges]);
+
+  // Intercept navigation attempts (both links and router.push calls via buttons)
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+
+      // Check for link clicks
+      const link = target.closest("a");
+      if (link) {
+        const href = link.getAttribute("href");
+        if (
+          href &&
+          !href.startsWith("#") &&
+          !link.hasAttribute("data-ignore-warning")
+        ) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          pendingNavigationRef.current = href;
+          setShowUnsavedWarning(true);
+          return;
+        }
+      }
+
+      // Check for button clicks that trigger router.push()
+      // We need to intercept before the onClick handler runs (capture phase)
+      const button = target.closest("button");
+      if (button) {
+        const buttonText = (button.textContent || "").trim();
+
+        // Check if button is the Lumio button in PageHeader
+        // The Lumio button contains "Lumio" text
+        if (
+          buttonText === "Lumio" ||
+          (buttonText.includes("Lumio") && buttonText.length < 20)
+        ) {
+          // Verify it's in the header area by checking parent structure
+          const headerArea = button.closest("div.p-6");
+          if (headerArea) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            pendingNavigationRef.current = "/";
+            setShowUnsavedWarning(true);
+            return;
+          }
+        }
+
+        // Check if button is the CurrentProjectIndicator button
+        // It contains "Current Project" text
+        if (
+          buttonText.includes("Current Project") ||
+          buttonText.includes("Current Project:")
+        ) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          if (currentProjectId) {
+            const targetUrl = `/saved/${currentProjectId}`;
+            pendingNavigationRef.current = targetUrl;
+            setShowUnsavedWarning(true);
+          }
+          return;
+        }
+      }
+    };
+
+    document.addEventListener("click", handleClick, true);
+    return () => {
+      document.removeEventListener("click", handleClick, true);
+    };
+  }, [hasUnsavedChanges, currentProjectId]);
+
+  // Handle confirmation to proceed with navigation
+  const handleConfirmExit = () => {
+    const targetUrl = pendingNavigationRef.current;
+    setShowUnsavedWarning(false);
+    pendingNavigationRef.current = null;
+
+    if (targetUrl) {
+      // Special case for browser back/forward
+      if (targetUrl === "back") {
+        window.history.back();
+      } else if (targetUrl.startsWith("/")) {
+        // Relative path, use router.push
+        // Set flag to bypass the override check
+        isConfirmingNavigationRef.current = true;
+        router.push(targetUrl);
+      } else if (targetUrl.startsWith("http")) {
+        // External URL
+        window.location.href = targetUrl;
+      }
+    }
+  };
+
+  // Handle cancel - stay on page
+  const handleCancelExit = () => {
+    setShowUnsavedWarning(false);
+    pendingNavigationRef.current = null;
+  };
 
   // persist presets when they change
   useEffect(() => {
@@ -740,6 +1012,30 @@ export default function EditShotPage() {
           )}
         </div>
       </div>
+
+      {/* Unsaved Changes Warning Modal */}
+      <Dialog open={showUnsavedWarning} onOpenChange={setShowUnsavedWarning}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Unsaved Changes</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to exit? You have unsaved changes.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              onClick={handleCancelExit}
+              variant="outline"
+              style={{ cursor: "pointer" }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmExit} style={{ cursor: "pointer" }}>
+              Exit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
