@@ -56,7 +56,7 @@ export default function SearchPage() {
       files && files.length > 0 ? await fileToDataUrl(files[0]) : ""
     ) as string;
 
-    if (files && files.length > 0) setReferenceImage(fileDataUrl)
+    if (files && files.length > 0) setReferenceImage(fileDataUrl);
 
     // Build query parameters
     const params = new URLSearchParams();

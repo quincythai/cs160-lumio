@@ -6,12 +6,26 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 
 import { Card } from "@/components/ui/card";
-import { Plus, Check } from "lucide-react";
+import { Plus, Check, ArrowUpIcon, ArrowDownIcon } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
-import { projectsAtom, currentProjectIdAtom, type Shot, referenceImageAtom } from "@/lib/store";
+import {
+  projectsAtom,
+  currentProjectIdAtom,
+  type Shot,
+  referenceImageAtom,
+} from "@/lib/store";
 import shotMetadata from "@/shot-database/metadata.json";
+import { FieldLabel } from "@/components/ui/field";
 
 type ShotMetadata = {
   id: number;
@@ -41,8 +55,37 @@ export default function SearchResultsPage() {
 
   const [loading, setLoading] = useState<boolean>(true);
   const [matchingShotIds, setMatchingShotIds] = useState<number[]>([]);
+  const [sortField, setSortField] = useState<string>("title");
+  const [sortAscending, setSortAscending] = useState<boolean>(true);
+
+  const sortByTitle = (shot1: ShotMetadata, shot2: ShotMetadata): number => {
+    const strCompVal = shot1.movie_title.localeCompare(shot2.movie_title);
+    // Tie break with year, ascending
+    if (strCompVal === 0) {
+      return shot1.year - shot2.year;
+    }
+    return strCompVal;
+  };
+
+  const sortByYear = (shot1: ShotMetadata, shot2: ShotMetadata): number => {
+    const yearCompVal = shot1.year - shot2.year;
+    // Tie break with title, ascending
+    if (yearCompVal === 0) {
+      return shot1.movie_title.localeCompare(shot2.movie_title);
+    }
+    return yearCompVal;
+  };
+
+  const sortFn = sortField === "title" ? sortByTitle : sortByYear;
   const searchResults: SearchResult[] = shotMetadata
     .filter((shot: ShotMetadata) => matchingShotIds.includes(shot.id))
+    .toSorted((shot1: ShotMetadata, shot2: ShotMetadata) => {
+      if (sortAscending) {
+        return sortFn(shot1, shot2);
+      } else {
+        return -sortFn(shot1, shot2);
+      }
+    })
     .map((shot: ShotMetadata) => ({
       id: String(shot.id),
       imageUrl: shot.image_url,
@@ -125,7 +168,7 @@ export default function SearchResultsPage() {
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
       <PageHeader title="Search results" />
 
-      <div className="p-8 max-w-7xl mx-auto">
+      <div className="pr-8 pl-8">
         {loading ? (
           <div className="flex justify-center">
             <Spinner className="size-25" />
@@ -140,77 +183,103 @@ export default function SearchResultsPage() {
           //     Filter
           //   </Button>
           // </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {searchResults.length === 0 && (
-              <div>No matching shots in database</div>
-            )}
-            {searchResults.map((result) => (
-              <Card
-                key={result.id}
-                className="overflow-hidden border-2 hover:shadow-lg transition-shadow bg-white"
-                style={{ borderColor: "#472d30" }}
+          <div>
+            <div className="flex gap-2 pb-5">
+              <div className="flex gap-2">
+                <FieldLabel htmlFor="sortBy">Sort By</FieldLabel>
+                <Select value={sortField} onValueChange={setSortField}>
+                  <SelectTrigger className="w-[180px] bg-white">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="title">Title</SelectItem>
+                    <SelectItem value="year">Year</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Change sort direction"
+                onClick={() => setSortAscending(!sortAscending)}
               >
-                <div className="relative w-full aspect-video bg-gray-200">
-                  <Image
-                    src={result.imageUrl}
-                    alt={result.title}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                </div>
-                <div className="p-4 flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3
-                        className="font-semibold text-lg"
-                        style={{ color: "#472d30" }}
-                      >
-                        {result.title}
-                      </h3>
-                      <span
-                        className="text-sm"
-                        style={{ color: "#472d30", opacity: 0.7 }}
-                      >
-                        {result.year}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleAddShot(result)}
-                        className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer"
-                        style={{
-                          color: isShotInProject(result.id)
-                            ? "#22c55e"
-                            : "#472d30",
-                        }}
-                        aria-label={
-                          isShotInProject(result.id)
-                            ? "Remove from project"
-                            : "Add to project"
-                        }
-                      >
-                        {isShotInProject(result.id) ? (
-                          <Check size={20} />
-                        ) : (
-                          <Plus size={20} />
-                        )}
-                      </button>
-                      {/* <button
+                {sortAscending ? <ArrowUpIcon /> : <ArrowDownIcon />}
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {searchResults.length === 0 && (
+                <div>No matching shots in database</div>
+              )}
+              {searchResults.map((result) => (
+                <Card
+                  key={result.id}
+                  className="overflow-hidden border-2 hover:shadow-lg transition-shadow bg-white"
+                  style={{ borderColor: "#472d30" }}
+                >
+                  <div className="relative w-full aspect-video bg-gray-200">
+                    <Image
+                      src={result.imageUrl}
+                      alt={result.title}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+                  <div className="p-4 flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3
+                          className="font-semibold text-lg"
+                          style={{ color: "#472d30" }}
+                        >
+                          {result.title}
+                        </h3>
+                        <span
+                          className="text-sm"
+                          style={{ color: "#472d30", opacity: 0.7 }}
+                        >
+                          {result.year}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleAddShot(result)}
+                          className="p-2 hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                          style={{
+                            color: isShotInProject(result.id)
+                              ? "#22c55e"
+                              : "#472d30",
+                          }}
+                          aria-label={
+                            isShotInProject(result.id)
+                              ? "Remove from project"
+                              : "Add to project"
+                          }
+                        >
+                          {isShotInProject(result.id) ? (
+                            <Check size={20} />
+                          ) : (
+                            <Plus size={20} />
+                          )}
+                        </button>
+                        {/* <button
                       className="p-2 hover:bg-gray-100 rounded transition-colors"
                       style={{ color: "#472d30" }}
                       aria-label="Download"
                     >
                       <Download size={20} />
                     </button> */}
+                      </div>
                     </div>
+                    <span className="text-sm" style={{ color: "#472d30" }}>
+                      {result.timestamp}
+                    </span>
                   </div>
-                  <span className="text-sm" style={{ color: "#472d30" }}>
-                    {result.timestamp}
-                  </span>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))}
+            </div>
           </div>
         )}
       </div>

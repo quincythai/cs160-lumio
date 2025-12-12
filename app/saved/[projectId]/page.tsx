@@ -39,6 +39,29 @@ export default function ProjectPage({
 
   const [editedTitle, setEditedTitle] = useState("");
 
+  const formatShotTimestamp = (ts: any) => {
+    if (!ts) return "";
+    const s = String(ts);
+    // ISO-like timestamps (e.g. 2025-12-05T20:18:36.276Z)
+    const isoRegex = /^\d{4}-\d{2}-\d{2}T/;
+    if (isoRegex.test(s)) {
+      try {
+        return `Saved: ${new Date(s).toLocaleString()}`;
+      } catch (_e) {
+        return s;
+      }
+    }
+
+    // Film time like HH:MM:SS or MM:SS
+    const filmTimeRegex = /^\d{1,2}:\d{2}(:\d{2})?$/;
+    if (filmTimeRegex.test(s)) {
+      return `Film time: ${s}`;
+    }
+
+    // Fallback: return as-is
+    return s;
+  };
+
   // Auto-set current project when page loads
   useEffect(() => {
     if (projectId && currentProjectId !== projectId) {
@@ -297,63 +320,38 @@ export default function ProjectPage({
                   onClick={() => {
                     const pid = projectId || "unsaved";
 
-                    const projectShotsFromAtom = allShots[pid];
-                    const projectShots =
-                      projectShotsFromAtom ?? project?.shots ?? [];
-                    const exists = projectShots.find(
-                      (s) => String(s.id) === String(shot.id)
-                    );
-                    if (exists) {
-                      // If the shot exists only in the project data (not in the atom), copy it into the atom
-                      if (!projectShotsFromAtom) {
-                        // normalize image path and fields
-                        let src =
-                          (shot as any).imageUrl ?? (shot as any).url ?? "";
-                        if (
-                          src &&
-                          !src.startsWith("/") &&
-                          !src.startsWith("http")
-                        ) {
-                          src = `/shot-database/images/${src}`;
-                        }
-
-                        const normalized = {
-                          id: String(shot.id),
-                          url: src,
-                          imageUrl: src,
-                          title: shot.title ?? "",
-                          year:
-                            shot.year !== undefined ? String(shot.year) : "",
-                          timestamp: shot.timestamp ?? new Date().toISOString(),
-                          notes: shot.notes ?? "",
-                          ...((shot as any).filters
-                            ? { filters: (shot as any).filters }
-                            : {}),
-                        } as any;
-
-                        const next = {
-                          ...allShots,
-                          [pid]: [...(allShots[pid] || []), normalized],
-                        };
-                        try {
-                          localStorage.setItem(
-                            SHOTS_STORAGE_KEY,
-                            JSON.stringify(next)
-                          );
-                        } catch (err) {
-                          console.warn(
-                            "Failed to persist shots to localStorage",
-                            err
-                          );
-                        }
-                        setAllShots(next);
-                        router.push(`/edit/${String(shot.id)}`);
-                        return;
+                    // Ensure there is a normalized copy of this shot in shotsAtom
+                    const atomList = allShots[pid] ?? [];
+                    const existsInAtom = atomList.find((s: any) => String(s.id) === String(shot.id));
+                    if (!existsInAtom) {
+                      // normalize image path and fields
+                      let src = (shot as any).imageUrl ?? (shot as any).url ?? "";
+                      if (src && !src.startsWith("/") && !src.startsWith("http")) {
+                        src = `/shot-database/images/${src}`;
                       }
 
-                      router.push(`/edit/${String(shot.id)}`);
-                      return;
+                      const normalized = {
+                        id: String(shot.id),
+                        url: src,
+                        imageUrl: src,
+                        title: shot.title ?? "",
+                        year: shot.year !== undefined ? String(shot.year) : "",
+                        timestamp: shot.timestamp ?? new Date().toISOString(),
+                        notes: shot.notes ?? "",
+                        ...((shot as any).filters ? { filters: (shot as any).filters } : {}),
+                      } as any;
+
+                      const next = { ...allShots, [pid]: [...atomList, normalized] };
+                      try {
+                        localStorage.setItem(SHOTS_STORAGE_KEY, JSON.stringify(next));
+                      } catch (err) {
+                        console.warn("Failed to persist shots to localStorage", err);
+                      }
+                      setAllShots(next);
                     }
+
+                    // Navigate to editor in all cases
+                    router.push(`/edit/${String(shot.id)}`);
                   }}
                   className="absolute top-2 left-2 z-10 p-2 rounded-full bg-[#472d30] text-[#ffe1a8] hover:bg-white hover:text-[#472d30] shadow-md transition-colors cursor-pointer"
                   aria-label="Edit shot"
@@ -388,7 +386,7 @@ export default function ProjectPage({
                     </div>
                   </div>
                   <span className="text-sm" style={{ color: "#472d30" }}>
-                    {shot.timestamp}
+                    {formatShotTimestamp(atomShot?.timestamp ?? shot.timestamp)}
                   </span>
                   <div className="mt-2">
                     <Textarea

@@ -409,8 +409,45 @@ export default function EditShotPage() {
     }
 
     // now update projectsAtom with the cleaned & appended metadata (should be much smaller)
+    // As a safety, produce a minimized projects payload that removes any data URLs
+    // and keeps only small metadata fields. This helps avoid localStorage quota errors.
+    const minimizedProjects = finalProjects.map((p) => ({
+      ...p,
+      shots: (p.shots || []).map((s: any) => ({
+        id: s.id,
+        imageUrl:
+          typeof s.imageUrl === "string" && s.imageUrl.startsWith("data:")
+            ? (s.url && typeof s.url === "string" && !s.url.startsWith("data:") ? s.url : "")
+            : (typeof s.imageUrl === "string" ? s.imageUrl : (s.url && !String(s.url).startsWith("data:") ? s.url : "")),
+        title: s.title ?? "",
+        year: s.year ?? "",
+        timestamp: s.timestamp ?? new Date().toISOString(),
+        notes: s.notes ?? "",
+      })),
+    }));
+
     try {
-      setProjects(finalProjects);
+      // Quick writable check: try writing minimized payload to localStorage to detect quota issues early
+      try {
+        // Write to a temporary test key so we don't clobber the user's real projects value
+        const testKey = PROJECTS_STORAGE_KEY + "_test";
+        localStorage.setItem(testKey, JSON.stringify(minimizedProjects));
+        // remove the test key after checking writability
+        localStorage.removeItem(testKey);
+      } catch (_e) {
+        // If that fails, create an even smaller payload (drop imageUrl entirely)
+        const tinyProjects = minimizedProjects.map((p) => ({
+          ...p,
+          shots: p.shots.map((s: any) => ({ id: s.id, title: s.title, timestamp: s.timestamp })),
+        }));
+        setProjects(tinyProjects as any);
+        alert(
+          "Saved minimal project metadata because localStorage quota was exceeded. Try clearing some large images in Saved to restore full thumbnails."
+        );
+        return;
+      }
+
+      setProjects(minimizedProjects as any);
     } catch (err) {
       console.error("Failed to update projects (quota?)", err);
       alert(
@@ -701,14 +738,6 @@ export default function EditShotPage() {
               Generating AI edit...
             </div>
           )}
-        </div>
-
-        {/* AI-generated graph / metrics (placeholder) - below controls */}
-        <div className="mt-8 border rounded p-6 bg-white">
-          <h4 className="font-medium mb-2">Generated Graph / Metrics</h4>
-          <div className="h-40 border-dashed border-2 border-gray-200 rounded flex items-center justify-center text-gray-400">
-            AI-generated graph will appear here (placeholder)
-          </div>
         </div>
       </div>
     </div>
