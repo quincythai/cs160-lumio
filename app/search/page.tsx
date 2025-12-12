@@ -134,7 +134,7 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
-      <PageHeader title="Search shots" />
+      <PageHeader title="Search shots" path="/search" />
 
       <div className="p-8 min-h-[60vh] max-w-7xl mx-auto">
         <h1 className="text-xl col-span-5 pb-5">

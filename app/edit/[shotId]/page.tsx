@@ -746,7 +746,7 @@ export default function EditShotPage() {
   if (!shotId) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
-        <PageHeader title="Edit shot" />
+        <PageHeader title="Edit shot" path="/edit" />
         <div className="p-8 max-w-7xl mx-auto">
           <p>No shot specified.</p>
         </div>
@@ -757,7 +757,7 @@ export default function EditShotPage() {
   if (!shot) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
-        <PageHeader title="Edit shot" />
+        <PageHeader title="Edit shot" path="/edit" />
         <div className="p-8 max-w-7xl mx-auto">
           <p className="mt-6">Shot not found. It may have been deleted.</p>
           <div className="mt-4">
@@ -772,7 +772,7 @@ export default function EditShotPage() {
 
   return (
     <div className="min-h-screen p-8" style={{ backgroundColor: "#ffe1a8" }}>
-      <PageHeader title="Edit shot" />
+      <PageHeader title="Edit shot" path="/edit" />
 
       <div className="mt-8 w-full max-w-7xl mx-auto">
         <div className="flex flex-col lg:flex-row gap-6">

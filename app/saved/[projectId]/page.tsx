@@ -179,7 +179,7 @@ export default function ProjectPage({
   if (!project) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
-        <PageHeader title="Saved shots" />
+        <PageHeader title="Saved shots" path="/saved" />
         <div className="p-8">
           <p className="text-wine text-lg">Project not found</p>
         </div>
@@ -189,7 +189,7 @@ export default function ProjectPage({
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
-      <PageHeader title="Saved shots" />
+      <PageHeader title="Saved shots" path="/saved" />
       <div className="p-8 space-y-8 max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-4">

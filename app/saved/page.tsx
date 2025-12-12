@@ -68,7 +68,7 @@ export default function SavedPage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
-      <PageHeader title="Saved shots" />
+      <PageHeader title="Saved shots" path="/saved" />
       <div className="p-8 max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8">
           <div>
