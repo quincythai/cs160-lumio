@@ -16,11 +16,16 @@ const funnelDisplay = Funnel_Display({
 export default function Home() {
   const router = useRouter();
   return (
-    <div className={`flex flex-col items-center justify-center min-h-screen bg-white ${funnelDisplay.className} relative`}>
+    <div
+      className={`flex flex-col items-center justify-center min-h-screen bg-white ${funnelDisplay.className} relative`}
+    >
       <div className="absolute top-6 right-6">
         <CurrentProjectIndicator />
       </div>
-      <h1 className={`text-8xl font-bold mb-16 ${ultra.className}`} style={{ color: "#472d30" }}>
+      <h1
+        className={`text-8xl font-bold mb-16 ${ultra.className}`}
+        style={{ color: "#472d30" }}
+      >
         Lumio
       </h1>
       <p className="text-4xl mb-20" style={{ color: "#472d30" }}>

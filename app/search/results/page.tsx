@@ -106,7 +106,7 @@ export default function SearchResultsPage() {
     formData.append("endYear", searchParams.get("endYear") || "");
     formData.append(
       "shotDescription",
-      searchParams.get("shotDescription") || ""
+      searchParams.get("shotDescription") || "",
     );
 
     fetch("/api/search", {
@@ -128,7 +128,7 @@ export default function SearchResultsPage() {
   const handleAddShot = (shot: Shot) => {
     if (!currentProjectId) {
       alert(
-        "Please select a project first. Go to Saved shots to create or select a project."
+        "Please select a project first. Go to Saved shots to create or select a project.",
       );
       return;
     }
@@ -145,8 +145,8 @@ export default function SearchResultsPage() {
                 shots: project.shots.filter((s) => s.id !== shot.id),
                 updatedAt: new Date().toISOString(),
               }
-            : project
-        )
+            : project,
+        ),
       );
     } else {
       // Add shot to project
@@ -158,8 +158,8 @@ export default function SearchResultsPage() {
                 shots: [...project.shots, shot],
                 updatedAt: new Date().toISOString(),
               }
-            : project
-        )
+            : project,
+        ),
       );
     }
   };

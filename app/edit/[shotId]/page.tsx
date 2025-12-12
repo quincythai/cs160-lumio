@@ -28,13 +28,15 @@ export default function EditShotPage() {
   const [prevEditedUrl, setPrevEditedUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [initialOriginalUrl, setInitialOriginalUrl] = useState<string | null>(
-    null
+    null,
   );
   const [editedPreviewUrl, setEditedPreviewUrl] = useState<string | null>(null);
   const [promptText, setPromptText] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
-  const [lastSavedTimestamp, setLastSavedTimestamp] = useState<number>(Date.now());
+  const [lastSavedTimestamp, setLastSavedTimestamp] = useState<number>(
+    Date.now(),
+  );
   const pendingNavigationRef = useRef<string | null>(null);
   const originalRouterPushRef = useRef<
     ((href: string, options?: any) => void) | null
@@ -112,7 +114,7 @@ export default function EditShotPage() {
   // Apply current sliders to a canvas and return dataURL
   const renderWithFiltersToDataUrl = async (
     sourceUrl: string,
-    extraFilters = ""
+    extraFilters = "",
   ) => {
     return new Promise<string | null>((resolve) => {
       const img = new Image();
@@ -139,7 +141,7 @@ export default function EditShotPage() {
             0,
             w / 2,
             h / 2,
-            Math.max(w, h) / 1.2
+            Math.max(w, h) / 1.2,
           );
           // vignette intensity mapped to alpha
           const alpha = Math.min(0.9, vignette / 100);
@@ -163,7 +165,7 @@ export default function EditShotPage() {
     imageUrl: string,
     b: number,
     s: number,
-    v: number
+    v: number,
   ) => {
     const filterCss = `filter:brightness(${b}%) saturate(${s}%)`;
     const svg = `<?xml version='1.0' encoding='utf-8'?><svg xmlns='http://www.w3.org/2000/svg' width='1200' height='800' viewBox='0 0 1200 800' preserveAspectRatio='xMidYMid slice'><style>img{${filterCss}}</style><image href='${imageUrl}' x='0' y='0' width='100%' height='100%' preserveAspectRatio='xMidYMid slice' style='${filterCss}'/></svg>`;
@@ -243,7 +245,7 @@ export default function EditShotPage() {
         if (response.status === 429 || errorData.code === "RATE_LIMIT") {
           throw new Error(
             errorData.error ||
-              "Rate limit exceeded. Vertex AI is temporarily unavailable. Please wait a few minutes and try again."
+              "Rate limit exceeded. Vertex AI is temporarily unavailable. Please wait a few minutes and try again.",
           );
         }
         throw new Error(errorData.error || `API error: ${response.statusText}`);
@@ -260,7 +262,7 @@ export default function EditShotPage() {
     } catch (error: any) {
       console.error("Error generating AI edit:", error);
       setErrorMessage(
-        error.message || "Failed to generate AI edit. Please try again."
+        error.message || "Failed to generate AI edit. Please try again.",
       );
       // Restore previous state on error
       if (prevEditedUrl) {
@@ -296,18 +298,28 @@ export default function EditShotPage() {
   // Add the current preview (or original) to the currently selected project
   const addToCurrentProject = async () => {
     // Determine if user has modified filter sliders from defaults
-    const hasFilterChanges = brightness !== 100 || saturation !== 100 || vignette !== 0;
+    const hasFilterChanges =
+      brightness !== 100 || saturation !== 100 || vignette !== 0;
 
     let source: string | null = null;
 
     // If we have an AI-generated preview AND user has adjusted filters, bake filters on top of AI image
-    if (editedPreviewUrl && editedPreviewUrl.startsWith("data:") && hasFilterChanges) {
+    if (
+      editedPreviewUrl &&
+      editedPreviewUrl.startsWith("data:") &&
+      hasFilterChanges
+    ) {
       const baked = await renderWithFiltersToDataUrl(editedPreviewUrl);
       if (baked) {
         source = baked;
       } else {
         // Fallback: use SVG filter on the AI-generated image
-        source = makeSvgFilterDataUrl(editedPreviewUrl, brightness, saturation, vignette);
+        source = makeSvgFilterDataUrl(
+          editedPreviewUrl,
+          brightness,
+          saturation,
+          vignette,
+        );
       }
     }
     // If we have an AI-generated preview but NO filter changes, use it as-is
@@ -332,7 +344,7 @@ export default function EditShotPage() {
     const pid = currentProjectId ?? null;
     if (!pid) {
       alert(
-        "No current project selected. Select or create a project in Saved first."
+        "No current project selected. Select or create a project in Saved first.",
       );
       return;
     }
@@ -343,7 +355,7 @@ export default function EditShotPage() {
     const newShotFull = {
       id: newId,
       imageUrl: source,
-      url: originalUrl,  // Always store the original URL so future edits preserve it
+      url: originalUrl, // Always store the original URL so future edits preserve it
       title: "",
       year: "",
       timestamp: new Date().toISOString(),
@@ -375,7 +387,7 @@ export default function EditShotPage() {
             // ensure shotsAtom contains this image under the project's key
             nextAllShots[p.id] = nextAllShots[p.id] ?? [];
             const exists = nextAllShots[p.id].find(
-              (x: any) => String(x.id) === String(s.id)
+              (x: any) => String(x.id) === String(s.id),
             );
             if (!exists) {
               nextAllShots[p.id].push({ ...s, url: s.imageUrl });
@@ -397,7 +409,7 @@ export default function EditShotPage() {
             shots: [...p.shots, newShotForProject],
             updatedAt: new Date().toISOString(),
           }
-        : p
+        : p,
     );
 
     // persist shotsAtom first (smaller data in projects helps avoid quota)
@@ -425,10 +437,10 @@ export default function EditShotPage() {
               ? s.url
               : ""
             : typeof s.imageUrl === "string"
-            ? s.imageUrl
-            : s.url && !String(s.url).startsWith("data:")
-            ? s.url
-            : "",
+              ? s.imageUrl
+              : s.url && !String(s.url).startsWith("data:")
+                ? s.url
+                : "",
         title: s.title ?? "",
         year: s.year ?? "",
         timestamp: s.timestamp ?? new Date().toISOString(),
@@ -456,7 +468,7 @@ export default function EditShotPage() {
         }));
         setProjects(tinyProjects as any);
         alert(
-          "Saved minimal project metadata because localStorage quota was exceeded. Try clearing some large images in Saved to restore full thumbnails."
+          "Saved minimal project metadata because localStorage quota was exceeded. Try clearing some large images in Saved to restore full thumbnails.",
         );
         return;
       }
@@ -465,7 +477,7 @@ export default function EditShotPage() {
     } catch (err) {
       console.error("Failed to update projects (quota?)", err);
       alert(
-        "Unable to save to project: local storage quota exceeded. Try removing some saved projects or large images."
+        "Unable to save to project: local storage quota exceeded. Try removing some saved projects or large images.",
       );
       return;
     }
@@ -521,7 +533,7 @@ export default function EditShotPage() {
       (shot as any).imageUrl.startsWith("data:");
     const initOriginalUrl = imageIsData
       ? (shot as any).imageUrl
-      : shot?.url ?? null;
+      : (shot?.url ?? null);
 
     // Capture the "original" for this editing session
     setInitialOriginalUrl(initOriginalUrl);
@@ -815,7 +827,7 @@ export default function EditShotPage() {
                     pointerEvents: "none",
                     background: `radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(0,0,0,${Math.min(
                       0.9,
-                      vignette / 100
+                      vignette / 100,
                     )}) 100%)`,
                   }}
                 />
@@ -896,7 +908,7 @@ export default function EditShotPage() {
                             try {
                               localStorage.setItem(
                                 PRESETS_STORAGE_KEY,
-                                JSON.stringify(next)
+                                JSON.stringify(next),
                               );
                             } catch (_e) {}
                             return next;
@@ -928,7 +940,7 @@ export default function EditShotPage() {
                       try {
                         localStorage.setItem(
                           PRESETS_STORAGE_KEY,
-                          JSON.stringify(next)
+                          JSON.stringify(next),
                         );
                       } catch (_e) {}
                       return next;

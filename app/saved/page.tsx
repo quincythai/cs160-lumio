@@ -155,7 +155,7 @@ export default function SavedPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects
             .filter((p) =>
-              p.name.toLowerCase().includes(searchTerm.trim().toLowerCase())
+              p.name.toLowerCase().includes(searchTerm.trim().toLowerCase()),
             )
             .map((project) => (
               <Card
@@ -195,7 +195,7 @@ export default function SavedPage() {
                       onClick={(e) => {
                         e.stopPropagation();
                         const confirmDelete = window.confirm(
-                          `Delete project "${project.name}"? This action cannot be undone and will not be backed up.`
+                          `Delete project "${project.name}"? This action cannot be undone and will not be backed up.`,
                         );
                         if (confirmDelete) deleteProject(project.id);
                       }}
@@ -214,7 +214,7 @@ export default function SavedPage() {
                     <div className="h-full grid grid-cols-2 gap-1">
                       {project.shots.slice(0, 4).map((shot) => {
                         const atomShot = (allShots[project.id] ?? []).find(
-                          (s: any) => String(s.id) === String(shot.id)
+                          (s: any) => String(s.id) === String(shot.id),
                         );
                         const src =
                           atomShot?.imageUrl ??

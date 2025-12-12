@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     if (!imageDataUrl || !prompt) {
       return NextResponse.json(
         { error: "Missing required fields: image and prompt are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -19,12 +19,13 @@ export async function POST(request: NextRequest) {
     if (!serviceAccountJson) {
       return NextResponse.json(
         { error: "Service account credentials not configured" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     const serviceAccount = JSON.parse(serviceAccountJson);
-    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID || serviceAccount.project_id;
+    const projectId =
+      process.env.GOOGLE_CLOUD_PROJECT_ID || serviceAccount.project_id;
     const location = process.env.VERTEX_AI_LOCATION || "us-west2";
 
     // Convert data URL to base64 string (remove data:image/...;base64, prefix)
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
     if (!base64Match) {
       return NextResponse.json(
         { error: "Invalid image data URL format" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -86,22 +87,30 @@ export async function POST(request: NextRequest) {
       } catch (error: any) {
         lastError = error;
         // Check if it's a rate limit error (429)
-        if (error.code === 429 || error.status === "RESOURCE_EXHAUSTED" || error.message?.includes("429")) {
+        if (
+          error.code === 429 ||
+          error.status === "RESOURCE_EXHAUSTED" ||
+          error.message?.includes("429")
+        ) {
           if (attempt < maxRetries - 1) {
             // Wait before retrying (exponential backoff)
             const delay = retryDelay * Math.pow(2, attempt);
-            console.log(`Rate limited, retrying in ${delay}ms... (attempt ${attempt + 1}/${maxRetries})`);
+            console.log(
+              `Rate limited, retrying in ${delay}ms... (attempt ${attempt + 1}/${maxRetries})`,
+            );
             await new Promise((resolve) => setTimeout(resolve, delay));
             continue;
           } else {
             // Final attempt failed, return rate limit error
             return NextResponse.json(
               {
-                error: "Rate limit exceeded. Vertex AI is temporarily unavailable. Please wait a few minutes and try again.",
+                error:
+                  "Rate limit exceeded. Vertex AI is temporarily unavailable. Please wait a few minutes and try again.",
                 code: "RATE_LIMIT",
-                details: "You've hit the rate limit for Vertex AI. This can happen on free tier accounts or when making too many requests quickly.",
+                details:
+                  "You've hit the rate limit for Vertex AI. This can happen on free tier accounts or when making too many requests quickly.",
               },
-              { status: 429 }
+              { status: 429 },
             );
           }
         }
@@ -117,21 +126,29 @@ export async function POST(request: NextRequest) {
     const response = result.response;
 
     // Extract the edited image from the response
-    if (!response.candidates || !response.candidates[0] || !response.candidates[0].content || !response.candidates[0].content.parts) {
+    if (
+      !response.candidates ||
+      !response.candidates[0] ||
+      !response.candidates[0].content ||
+      !response.candidates[0].content.parts
+    ) {
       return NextResponse.json(
         { error: "Invalid response format from Vertex AI" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     const imagePart = response.candidates[0].content.parts.find(
-      (part: any) => part.inlineData
+      (part: any) => part.inlineData,
     );
 
     if (!imagePart || !imagePart.inlineData) {
       return NextResponse.json(
-        { error: "No image in response from Vertex AI. The model may not support image generation, or the prompt was blocked." },
-        { status: 500 }
+        {
+          error:
+            "No image in response from Vertex AI. The model may not support image generation, or the prompt was blocked.",
+        },
+        { status: 500 },
       );
     }
 
@@ -141,23 +158,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ editedImage: editedImageDataUrl });
   } catch (error: any) {
     console.error("Error editing image:", error);
-    
+
     // Handle specific error types
     if (error.code === 429 || error.status === "RESOURCE_EXHAUSTED") {
       return NextResponse.json(
         {
-          error: "Rate limit exceeded. Please wait a few minutes and try again.",
+          error:
+            "Rate limit exceeded. Please wait a few minutes and try again.",
           code: "RATE_LIMIT",
           details: error.message,
         },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
     return NextResponse.json(
       { error: "Failed to edit image", details: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-
