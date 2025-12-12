@@ -21,7 +21,6 @@ export default function EditShotPage() {
   const shotId = params?.shotId as string | undefined;
   const router = useRouter();
   const [allShots, setAllShots] = useAtom(shotsAtom);
-  const fileRef = useRef<HTMLInputElement | null>(null);
   const [brightness, setBrightness] = useState<number>(100);
   const [saturation, setSaturation] = useState<number>(100);
   const [vignette, setVignette] = useState<number>(0);
@@ -34,6 +33,7 @@ export default function EditShotPage() {
   const [promptText, setPromptText] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
+  const [lastSavedTimestamp, setLastSavedTimestamp] = useState<number>(Date.now());
   const pendingNavigationRef = useRef<string | null>(null);
   const originalRouterPushRef = useRef<
     ((href: string, options?: any) => void) | null
@@ -99,42 +99,16 @@ export default function EditShotPage() {
   const [projects, setProjects] = useAtom(projectsAtom);
   const [currentProjectId] = useAtom(currentProjectIdAtom);
 
-  // keep a ref to the edited preview img element for sizing when saving
-  const editedImgRef = useRef<HTMLImageElement | null>(null);
-
-  // Find shot anywhere in the projects map
-  const { shot, projectId } = useMemo(() => {
-    if (!shotId)
-      return { shot: null as Shot | null, projectId: null as string | null };
+  const { shot } = useMemo(() => {
+    if (!shotId) return { shot: null as Shot | null };
     for (const pid of Object.keys(allShots)) {
       const found = allShots[pid].find((s) => s.id === shotId);
-      if (found) return { shot: found, projectId: pid };
+      if (found) return { shot: found };
     }
-    return { shot: null as Shot | null, projectId: null as string | null };
+    return { shot: null as Shot | null };
   }, [allShots, shotId]);
 
-  const replaceWithFile = (file?: File) => {
-    if (!file || !shotId || !projectId) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      setAllShots((prev) => {
-        const prevList = prev[projectId] ?? [];
-        const nextList = prevList.map((s) =>
-          s.id === shotId ? { ...s, url: dataUrl } : s
-        );
-        return { ...prev, [projectId]: nextList };
-      });
-      // when user replaces the file, reset sliders and clear previous generated state
-      setBrightness(100);
-      setSaturation(100);
-      setVignette(0);
-      setPrevEditedUrl(null);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // Apply current sliders to a canvas and return dataURL (used for Save and simulated Generate)
+  // Apply current sliders to a canvas and return dataURL
   const renderWithFiltersToDataUrl = async (
     sourceUrl: string,
     extraFilters = ""
@@ -195,21 +169,7 @@ export default function EditShotPage() {
     return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
   };
 
-  // Save current slider edits into the shot (persist)
-  // Save edits locally to the preview (does NOT modify saved shots)
-  const saveEditsToPreview = async () => {
-    if (!shot || !shot.url) return;
-    // preserve previous edited preview so Undo can restore it
-    setPrevEditedUrl(editedPreviewUrl ?? shot.url);
-    // Use the original image as the rendering source to avoid re-applying
-    // previously baked edits (which would make the effect more dramatic).
-    const source = initialOriginalUrl ?? shot.url;
-    const dataUrl = await renderWithFiltersToDataUrl(source);
-    if (!dataUrl) return;
-    setEditedPreviewUrl(dataUrl);
-  };
-
-  // Helper function to convert image URL to data URL
+  // Convert image URL to data URL for AI processing
   const convertImageToDataUrl = async (imageUrl: string): Promise<string> => {
     // If it's already a data URL, return it
     if (imageUrl.startsWith("data:")) {
@@ -320,17 +280,16 @@ export default function EditShotPage() {
   // Reset edits to original image and clear edited preview
   const resetEdits = () => {
     if (!shot) return;
-    const resetUrl = initialOriginalUrl ?? shot.url ?? null;
-    setEditedPreviewUrl(resetUrl);
+    // Only reset sliders, keep the AI-edited preview if it exists
     setBrightness(100);
     setSaturation(100);
     setVignette(0);
-    setPrevEditedUrl(null);
-    // Reset initial values to mark as "saved"
+    // Reset initial slider values to mark as "saved"
     initialBrightness.current = 100;
     initialSaturation.current = 100;
     initialVignette.current = 0;
-    initialEditedPreviewUrl.current = resetUrl;
+    // Update timestamp to reflect the reset state
+    setLastSavedTimestamp(Date.now());
   };
 
   // Add the current preview (or original) to the currently selected project
@@ -513,10 +472,13 @@ export default function EditShotPage() {
     alert("Saved to current project.");
 
     // Mark as saved - reset initial values to current state
+    // This ensures the unsaved changes warning doesn't incorrectly appear
     initialBrightness.current = brightness;
     initialSaturation.current = saturation;
     initialVignette.current = vignette;
-    initialEditedPreviewUrl.current = source;
+    initialEditedPreviewUrl.current = editedPreviewUrl;
+    // Update timestamp to trigger hasUnsavedChanges recalculation
+    setLastSavedTimestamp(Date.now());
   };
 
   // Check if there are unsaved changes
@@ -532,13 +494,10 @@ export default function EditShotPage() {
       vignetteChanged ||
       editedUrlChanged
     );
-  }, [brightness, saturation, vignette, editedPreviewUrl]);
+  }, [brightness, saturation, vignette, editedPreviewUrl, lastSavedTimestamp]);
 
-  // reset sliders when the shotId (selected shot) changes
-  // we intentionally do NOT clear `prevEditedUrl` when the image URL changes
-  // so Undo can restore the previous generated version after `simulateGenerate`.
+  // Initialize state when shot changes
   useEffect(() => {
-    // initialize sliders from shot.filters if present, otherwise defaults
     const f = (shot as any)?.filters;
     const initBrightness = f?.brightness ?? 100;
     const initSaturation = f?.saturation ?? 100;
@@ -554,17 +513,23 @@ export default function EditShotPage() {
     initialSaturation.current = initSaturation;
     initialVignette.current = initVignette;
 
-    // capture the original image URL when entering this shot edit page
-    setInitialOriginalUrl(shot?.url ?? null);
-    // If the shot has a baked data URL, show that as the edited preview; otherwise show original
+    // If the shot has a baked data URL (already edited), use that as the "original" for this editing session
+    // Otherwise, use the raw database URL
     const imageIsData =
       typeof (shot as any)?.imageUrl === "string" &&
       (shot as any).imageUrl.startsWith("data:");
-    const initEditedUrl = imageIsData
+    const initOriginalUrl = imageIsData
       ? (shot as any).imageUrl
       : shot?.url ?? null;
-    setEditedPreviewUrl(initEditedUrl);
-    initialEditedPreviewUrl.current = initEditedUrl;
+    
+    // Capture the "original" for this editing session
+    setInitialOriginalUrl(initOriginalUrl);
+    
+    // Start with the same image in the edited preview
+    setEditedPreviewUrl(initOriginalUrl);
+    initialEditedPreviewUrl.current = initOriginalUrl;
+    // Reset saved timestamp when loading a new shot
+    setLastSavedTimestamp(Date.now());
   }, [shotId]);
 
   // Handle browser navigation (refresh, close tab, etc.)
@@ -830,7 +795,6 @@ export default function EditShotPage() {
 
             <div className="border p-4 rounded bg-white relative">
               <img
-                ref={editedImgRef}
                 src={editedPreviewUrl ?? shot.url}
                 alt="Edited preview"
                 className="w-full h-56 object-contain rounded"
