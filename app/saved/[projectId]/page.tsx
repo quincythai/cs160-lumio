@@ -262,7 +262,7 @@ export default function ProjectPage({
                     router.push(`/saved/${value}`);
                   }}
                 >
-                  <SelectTrigger className="w-[200px]">
+                  <SelectTrigger className="w-[200px] bg-white">
                     <SelectValue placeholder="Select project" />
                   </SelectTrigger>
                   <SelectContent>
