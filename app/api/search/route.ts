@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
         error:
           "Need to provide input for at least 1 search query field, but none provided",
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -56,14 +56,16 @@ export async function POST(request: NextRequest) {
 
         return shotSizeMatches && shotTimePeriodMatches;
       })
-      .map((shot) => shot.id)
+      .map((shot) => shot.id),
   );
 
   if (referenceImage || shotDescription) {
     const MAX_SHOT_DATABASE_CHARS = 100000;
 
     // Only include subset of shots that are already matching by shot size and year (reduces context size)
-    const shotMetadataSubset = shotMetadata.filter((shot, index) => matchingShotIds.has(index))
+    const shotMetadataSubset = shotMetadata.filter((shot, index) =>
+      matchingShotIds.has(index),
+    );
     const shotIdsByDescriptionOrReferenceImage = await fetch(
       "https://noggin.rea.gent/expected-ostrich-1034",
       {
@@ -77,9 +79,12 @@ export async function POST(request: NextRequest) {
           shotDescription: shotDescription,
           // You can use an external URL or a data URL here.
           referenceImage: referenceImage,
-          shotDatabase: JSON.stringify(shotMetadataSubset).substring(0, MAX_SHOT_DATABASE_CHARS),
+          shotDatabase: JSON.stringify(shotMetadataSubset).substring(
+            0,
+            MAX_SHOT_DATABASE_CHARS,
+          ),
         }),
-      }
+      },
     ).then((response) => response.json());
 
     matchingShotIds.clear();

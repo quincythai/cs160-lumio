@@ -106,7 +106,7 @@ export default function SearchResultsPage() {
     formData.append("endYear", searchParams.get("endYear") || "");
     formData.append(
       "shotDescription",
-      searchParams.get("shotDescription") || ""
+      searchParams.get("shotDescription") || "",
     );
 
     fetch("/api/search", {
@@ -128,7 +128,7 @@ export default function SearchResultsPage() {
   const handleAddShot = (shot: Shot) => {
     if (!currentProjectId) {
       alert(
-        "Please select a project first. Go to Saved shots to create or select a project."
+        "Please select a project first. Go to Saved shots to create or select a project.",
       );
       return;
     }
@@ -145,8 +145,8 @@ export default function SearchResultsPage() {
                 shots: project.shots.filter((s) => s.id !== shot.id),
                 updatedAt: new Date().toISOString(),
               }
-            : project
-        )
+            : project,
+        ),
       );
     } else {
       // Add shot to project
@@ -158,31 +158,22 @@ export default function SearchResultsPage() {
                 shots: [...project.shots, shot],
                 updatedAt: new Date().toISOString(),
               }
-            : project
-        )
+            : project,
+        ),
       );
     }
   };
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
-      <PageHeader title="Search results" />
+      <PageHeader title="Search results" path="/search" />
 
-      <div className="pr-8 pl-8">
+      <div className="p-8 min-h-[60vh] max-w-7xl mx-auto">
         {loading ? (
           <div className="flex justify-center">
             <Spinner className="size-25" />
           </div>
         ) : (
-          //   <div className="mb-6">
-          //   <Button
-          //     className="flex items-center gap-2"
-          //     style={{ backgroundColor: "#472d30", color: "#ffe1a8" }}
-          //   >
-          //     <Filter size={18} />
-          //     Filter
-          //   </Button>
-          // </div>
           <div>
             <div className="flex gap-2 pb-5">
               <div className="flex gap-2">

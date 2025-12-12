@@ -11,9 +11,10 @@ const ultra = Ultra({
 
 interface PageHeaderProps {
   title: string;
+  path: string;
 }
 
-export default function PageHeader({ title }: PageHeaderProps) {
+export default function PageHeader({ title, path }: PageHeaderProps) {
   const router = useRouter();
 
   return (
@@ -23,14 +24,19 @@ export default function PageHeader({ title }: PageHeaderProps) {
           <div>
             <button
               onClick={() => router.push("/")}
-              className={`text-xl hover:underline cursor-pointer ${ultra.className}`}
+              className={`text-xl cursor-pointer ${ultra.className}`}
               style={{ color: "#472d30" }}
             >
               Lumio
             </button>
             <span className="text-xl" style={{ color: "#472d30" }}>
               {" "}
-              | {title}
+              |
+              {" "}
+              <button
+                onClick={() => router.push(path)}
+                className="cursor-pointer"
+              >{title}</button>
             </span>
           </div>
           <CurrentProjectIndicator />

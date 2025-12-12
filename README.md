@@ -21,7 +21,7 @@ Create a new `.env.local` file in the root of the repository with the following 
 
 ### 1. SHOT_SEARCH_SECRET_KEY
 - **Purpose**: API key for the shot search functionality using Reagent
-- **How to get it**: 
+- **How to get it**:
   1. Go to [Reagent](https://rea.gent/noggins/expected-ostrich-1034/use)
   2. Sign in or create an account
   3. Copy the API key/secret from the Reagent dashboard
@@ -64,7 +64,7 @@ Create a new `.env.local` file in the root of the repository with the following 
 
 ### 5. VERTEX_AI_LOCATION
 - **Purpose**: The Google Cloud region where Vertex AI services are available
-- **Recommended values**: 
+- **Recommended values**:
   - `us-west2` (Los Angeles) - closest to California
   - `us-west1` (Oregon) - alternative
   - `us-central1` (Iowa) - fallback if model not available in other regions
@@ -93,6 +93,19 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Format files with Prettier
+
+We use [Prettier](https://prettier.io/) to autoformat code files. Run the command below in the root directory of the repo to do so:
+
+```sh
+npx prettier ./app ./lib --write
+```
+
+## Shot database
+
+See the [shot database README](shot-database/README.md) to see how to install required dependencies and run
+the script to create part of the shot database data.
 
 ## Learn More
 

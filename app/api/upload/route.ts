@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   if (!file) {
     return NextResponse.json(
       { error: "Nothing was uploaded. Get good bro." },
-      { status: 400 }
+      { status: 400 },
     );
   }
 

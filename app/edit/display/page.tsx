@@ -6,6 +6,8 @@ import PageHeader from "@/components/PageHeader";
 import { useAtom } from "jotai";
 import { shotsAtom, SHOTS_STORAGE_KEY } from "@/lib/atoms";
 import { currentProjectIdAtom } from "@/lib/store";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Check } from "lucide-react";
 
 export default function DisplayPage() {
   const router = useRouter();
@@ -13,7 +15,7 @@ export default function DisplayPage() {
   const imageName = searchParams.get("image"); // Get image using the search params in the URL
 
   if (!imageName) {
-    return <div>Some sort of error message</div>;
+    router.push("/404.html");
   }
 
   const [allShots, setAllShots] = useAtom(shotsAtom);
@@ -45,7 +47,7 @@ export default function DisplayPage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
-      <PageHeader title="Edit shots" />
+      <PageHeader title="Edit shots" path="/edit" />
 
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 max-w-7xl mx-auto">
         <div className="mb-8 max-w-full">
@@ -60,20 +62,20 @@ export default function DisplayPage() {
         </div>
 
         <div className="flex gap-4">
-          <button
+          <Button
             onClick={() => router.push("/edit")}
-            className="px-6 py-3 rounded border-2 hover:underline cursor-pointer"
-            style={{ borderColor: "#472d30", color: "#472d30" }}
+            className="px-6 py-3 rounded border-2"
+            style={{ borderColor: "#472d30" }}
           >
-            ← Go back
-          </button>
-          <button
+            <ArrowLeft /> Go back
+          </Button>
+          <Button
             onClick={handleConfirm}
-            className="px-6 py-3 rounded border-2 hover:underline cursor-pointer"
-            style={{ borderColor: "#472d30", color: "#472d30" }}
+            className="px-6 py-3 rounded border-2"
+            style={{ borderColor: "#472d30" }}
           >
-            ✓ Confirm
-          </button>
+            <Check /> Confirm
+          </Button>
         </div>
       </div>
     </div>

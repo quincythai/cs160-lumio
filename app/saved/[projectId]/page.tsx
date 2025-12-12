@@ -86,12 +86,12 @@ export default function ProjectPage({
           ? {
               ...p,
               shots: p.shots.map((shot) =>
-                shot.id === shotId ? { ...shot, notes } : shot
+                shot.id === shotId ? { ...shot, notes } : shot,
               ),
               updatedAt: new Date().toISOString(),
             }
-          : p
-      )
+          : p,
+      ),
     );
   };
 
@@ -106,8 +106,8 @@ export default function ProjectPage({
               shots: p.shots.filter((shot) => shot.id !== shotId),
               updatedAt: new Date().toISOString(),
             }
-          : p
-      )
+          : p,
+      ),
     );
   };
 
@@ -131,8 +131,8 @@ export default function ProjectPage({
               name: editedTitle.trim(),
               updatedAt: new Date().toISOString(),
             }
-          : p
-      )
+          : p,
+      ),
     );
     setIsEditingTitle(false);
   };
@@ -179,7 +179,7 @@ export default function ProjectPage({
   if (!project) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
-        <PageHeader title="Saved shots" />
+        <PageHeader title="Saved shots" path="/saved" />
         <div className="p-8">
           <p className="text-wine text-lg">Project not found</p>
         </div>
@@ -189,7 +189,7 @@ export default function ProjectPage({
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#ffe1a8" }}>
-      <PageHeader title="Saved shots" />
+      <PageHeader title="Saved shots" path="/saved" />
       <div className="p-8 space-y-8 max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -262,7 +262,7 @@ export default function ProjectPage({
                     router.push(`/saved/${value}`);
                   }}
                 >
-                  <SelectTrigger className="w-[200px]">
+                  <SelectTrigger className="w-[200px] bg-white">
                     <SelectValue placeholder="Select project" />
                   </SelectTrigger>
                   <SelectContent>
@@ -288,7 +288,7 @@ export default function ProjectPage({
 
           {shots.map((shot) => {
             const atomShot = (allShots[projectId] ?? []).find(
-              (s: any) => String(s.id) === String(shot.id)
+              (s: any) => String(s.id) === String(shot.id),
             );
             const src =
               atomShot?.imageUrl ??
@@ -322,11 +322,18 @@ export default function ProjectPage({
 
                     // Ensure there is a normalized copy of this shot in shotsAtom
                     const atomList = allShots[pid] ?? [];
-                    const existsInAtom = atomList.find((s: any) => String(s.id) === String(shot.id));
+                    const existsInAtom = atomList.find(
+                      (s: any) => String(s.id) === String(shot.id),
+                    );
                     if (!existsInAtom) {
                       // normalize image path and fields
-                      let src = (shot as any).imageUrl ?? (shot as any).url ?? "";
-                      if (src && !src.startsWith("/") && !src.startsWith("http")) {
+                      let src =
+                        (shot as any).imageUrl ?? (shot as any).url ?? "";
+                      if (
+                        src &&
+                        !src.startsWith("/") &&
+                        !src.startsWith("http")
+                      ) {
                         src = `/shot-database/images/${src}`;
                       }
 
@@ -338,14 +345,25 @@ export default function ProjectPage({
                         year: shot.year !== undefined ? String(shot.year) : "",
                         timestamp: shot.timestamp ?? new Date().toISOString(),
                         notes: shot.notes ?? "",
-                        ...((shot as any).filters ? { filters: (shot as any).filters } : {}),
+                        ...((shot as any).filters
+                          ? { filters: (shot as any).filters }
+                          : {}),
                       } as any;
 
-                      const next = { ...allShots, [pid]: [...atomList, normalized] };
+                      const next = {
+                        ...allShots,
+                        [pid]: [...atomList, normalized],
+                      };
                       try {
-                        localStorage.setItem(SHOTS_STORAGE_KEY, JSON.stringify(next));
+                        localStorage.setItem(
+                          SHOTS_STORAGE_KEY,
+                          JSON.stringify(next),
+                        );
                       } catch (err) {
-                        console.warn("Failed to persist shots to localStorage", err);
+                        console.warn(
+                          "Failed to persist shots to localStorage",
+                          err,
+                        );
                       }
                       setAllShots(next);
                     }
