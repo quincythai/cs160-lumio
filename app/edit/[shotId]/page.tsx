@@ -335,11 +335,27 @@ export default function EditShotPage() {
 
   // Add the current preview (or original) to the currently selected project
   const addToCurrentProject = async () => {
-    // Prefer an already-baked edited preview; otherwise bake from the original with current sliders
+    // Determine if user has modified filter sliders from defaults
+    const hasFilterChanges = brightness !== 100 || saturation !== 100 || vignette !== 0;
+    
     let source: string | null = null;
-    if (editedPreviewUrl && editedPreviewUrl.startsWith("data:")) {
+    
+    // If we have an AI-generated preview AND user has adjusted filters, bake filters on top of AI image
+    if (editedPreviewUrl && editedPreviewUrl.startsWith("data:") && hasFilterChanges) {
+      const baked = await renderWithFiltersToDataUrl(editedPreviewUrl);
+      if (baked) {
+        source = baked;
+      } else {
+        // Fallback: use SVG filter on the AI-generated image
+        source = makeSvgFilterDataUrl(editedPreviewUrl, brightness, saturation, vignette);
+      }
+    } 
+    // If we have an AI-generated preview but NO filter changes, use it as-is
+    else if (editedPreviewUrl && editedPreviewUrl.startsWith("data:")) {
       source = editedPreviewUrl;
-    } else {
+    } 
+    // Otherwise bake from the original with current sliders
+    else {
       const orig = initialOriginalUrl ?? shot?.url;
       if (!orig) {
         alert("No image to add.");
@@ -362,10 +378,12 @@ export default function EditShotPage() {
     }
 
     const newId = crypto.randomUUID();
+    // Get the original unedited URL
+    const originalUrl = initialOriginalUrl ?? shot?.url ?? "";
     const newShotFull = {
       id: newId,
       imageUrl: source,
-      url: source,
+      url: originalUrl,  // Always store the original URL so future edits preserve it
       title: "",
       year: "",
       timestamp: new Date().toISOString(),
