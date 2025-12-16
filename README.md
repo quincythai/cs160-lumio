@@ -107,6 +107,10 @@ npx prettier ./app ./lib --write
 See the [shot database README](shot-database/README.md) to see how to install required dependencies and run
 the script to create part of the shot database data.
 
+## Final video demo
+
+https://www.youtube.com/watch?v=Muz49LAaxfM
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
